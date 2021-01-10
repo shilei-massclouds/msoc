@@ -16,7 +16,7 @@ module tb_fifo;
     wire full;
     wire empty;
 
-    ip_fifo #(WIDTH, DEPTH) fifo(.*);
+    ip_fifo fifo(.*);
 
     assign wr_en = ~full;
     assign rd_en = ~empty;
@@ -57,12 +57,14 @@ module tb_fifo;
 
         #5 rst = 1'b0;
 
-        #300 $finish();
+        #1000 $finish();
     end
 
+`ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("ip_fifo.fsdb");
         $fsdbDumpvars();
     end
+`endif
 
 endmodule

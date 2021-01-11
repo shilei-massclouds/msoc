@@ -12,33 +12,36 @@ module ip_ft232h (
     input   wire  rd
 );
 
-    localparam DEPTH = 4;
-    localparam COUNT = 1 << DEPTH;
-
     bit clk;
-    bit [7:0] cells[COUNT];
-    bit [7:0] buff;
-
-    bit [(DEPTH-1):0] head;
-    bit [(DEPTH-1):0] tail;
+    bit [7:0] addr[4];
+    bit [2:0] addr_cnt;
+    bit [7:0] data[4];
+    bit [2:0] data_cnt;
+    bit [7:0] tmp;
+    bit [7:0] rdata;
+    bit state;
 
     assign clkout = clk;
-    assign txe = (((tail + 1) % COUNT) != head);
-    assign rxf = (tail != head);
-    assign adbus = rxf ? buff : 8'hFF;
+    assign txe = (addr_cnt == 4);
+    assign rxf = (data_cnt == 0);
+    assign adbus = state ? rdata : 8'bz;
 
     always #8 clk = ~clk;
 
+    bit can_read;
     always @(posedge clk) begin
-        buff <= 0xFF;
-
-        if (wr) begin
-            cells[tail] <= adbus;
-            tail <= (tail + 1) % COUNT;
-        end else if (rd) begin
-            buff <= cells[head];
-            head <= (head + 1) % COUNT;
-        end else begin
+        if (~wr) begin
+            addr[addr_cnt] <= adbus;
+            addr_cnt <= addr_cnt + 1;
+            data_cnt <= 4;
+        end else if (txe) begin
+            data <= addr;
+            state <= 1'b1;
+        end
+        
+        if (~oe & ~rd) begin
+            rdata <= data[4 - data_cnt];
+            data_cnt <= data_cnt - 1;
         end
     end
 

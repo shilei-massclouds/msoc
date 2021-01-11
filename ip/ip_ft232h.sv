@@ -17,7 +17,6 @@ module ip_ft232h (
     bit [2:0] addr_cnt;
     bit [7:0] data[4];
     bit [2:0] data_cnt;
-    bit [7:0] tmp;
     bit [7:0] rdata;
     bit state;
 
@@ -28,20 +27,25 @@ module ip_ft232h (
 
     always #8 clk = ~clk;
 
-    bit can_read;
     always @(posedge clk) begin
-        if (~wr) begin
-            addr[addr_cnt] <= adbus;
-            addr_cnt <= addr_cnt + 1;
-            data_cnt <= 4;
-        end else if (txe) begin
-            data <= addr;
-            state <= 1'b1;
-        end
-        
-        if (~oe & ~rd) begin
-            rdata <= data[4 - data_cnt];
-            data_cnt <= data_cnt - 1;
+        if (~state) begin
+            if (~wr) begin
+                addr[addr_cnt] <= adbus;
+                addr_cnt <= addr_cnt + 1;
+            end else if (txe) begin
+                addr_cnt <= 3'd0;
+                data_cnt <= 3'd4;
+                data <= addr;
+                state <= 1'b1;
+            end
+        end else begin
+            if (~oe) begin
+                rdata <= data[4 - data_cnt];
+                data_cnt <= data_cnt - 1;
+            end else if (rxf) begin
+                state <= 1'b0;
+                rdata <= 8'b0;
+            end
         end
     end
 

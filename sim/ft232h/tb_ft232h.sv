@@ -11,12 +11,13 @@ module tb_fifo;
     reg   siwu;
 
     wire  rxf;
-    reg   oe;
+    wire  oe;
     reg   rd;
 
     bit   state = 1'b0;
     reg   [7:0] adbus_buf;
     assign adbus = state ? 'hzz : adbus_buf;
+    assign oe = rxf;
 
     ip_ft232h ft232h(.*);
 
@@ -32,42 +33,49 @@ module tb_fifo;
         siwu = 1'b1;
         wr = 1'b1;
         rd = 1'b1;
-        oe = 1'b1;
 
-        i = 0;
-        while (i < 4) begin
-            @ (posedge clkout) begin
-                if (~txe) begin
+        for (integer j = 0; j < 3; j++) begin
+            $display("txe: %x", txe);
+            wait(~txe);
+
+            i = 0;
+            while (i < 4) begin
+                @ (posedge clkout) begin
                     adbus_buf = addr[i];
                     i = i + 1;
                     wr = 1'b0;
                 end
             end
-        end
 
-        @ (posedge clkout);
-        state = 1'b1;
-        wr = 1'b1;
+            @ (posedge clkout);
+            state = 1'b1;
+            wr = 1'b1;
 
-        wait(~rxf);
+            wait (~rxf);
 
-        oe = 1'b0;
+            $display($time,, "3: %x", rxf);
 
-        @ (posedge clkout);
-        rd = 1'b0;
-        @ (posedge clkout);
+            @ (posedge clkout);
+            rd = 1'b0;
 
-        i = 0;
-        while (i < 4) begin
-            @ (posedge clkout) begin
-                $display($time,, "Got[%d]: %x", i, adbus);
-                i = i + 1;
+            i = 0;
+            while (i < 4) begin
+                @ (posedge clkout) begin
+                    $display($time,, "Got[%d]: %x", i, adbus);
+                    i = i + 1;
+                end
             end
+
+            siwu = 1'b1;
+            wr = 1'b1;
+            rd = 1'b1;
+            state = 1'b0;
         end
 
         $finish();
     end
 
+`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("ip_ft232h.fsdb");

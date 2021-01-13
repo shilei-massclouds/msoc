@@ -2,17 +2,14 @@
 
 module tb_fifo;
 
-    localparam WIDTH = 8;
-    localparam DEPTH = 4;
-
     reg  rst;
     reg  wr_clk;
     reg  rd_clk;
 
     wire wr_en;
     wire rd_en;
-    reg  [(WIDTH-1):0] din;
-    wire [(WIDTH-1):0] dout;
+    reg  [7:0] din;
+    wire [7:0] dout;
     wire full;
     wire empty;
 

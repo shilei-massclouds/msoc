@@ -13,15 +13,15 @@ module ip_ft232h (
 );
 
     bit clk;
-    bit [7:0] addr[4];
+    bit [7:0] addr[8];
     bit [2:0] addr_cnt;
-    bit [7:0] data[4];
+    bit [7:0] data[8];
     bit [2:0] data_cnt;
     bit [7:0] rdata;
     bit state;
 
     assign clkout = clk;
-    assign txe = (addr_cnt == 4);
+    assign txe = (addr_cnt == 8);
     assign rxf = (data_cnt == 0);
     assign adbus = state ? rdata : 8'bz;
 
@@ -34,13 +34,13 @@ module ip_ft232h (
                 addr_cnt <= addr_cnt + 1;
             end else if (txe) begin
                 addr_cnt <= 3'd0;
-                data_cnt <= 3'd4;
+                data_cnt <= 3'd8;
                 data <= addr;
                 state <= 1'b1;
             end
         end else begin
             if (~oe) begin
-                rdata <= data[4 - data_cnt];
+                rdata <= data[8 - data_cnt];
                 data_cnt <= data_cnt - 1;
             end else if (rxf) begin
                 state <= 1'b0;

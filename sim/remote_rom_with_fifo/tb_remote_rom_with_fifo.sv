@@ -5,18 +5,26 @@
 module tb_remote_rom;
 
     reg clk;
+    reg ft_clk;
     reg rst_n;
     reg state;
-    reg [63:0] buff;
-    reg [2:0] offset;
+    reg [7:0] buff[8];
+    reg [2:0] buff_off;
 
-    reg full;
-    wire wr_en;
-    wire [7:0] din;
-
-    reg empty;
+    wire empty;
     wire rd_en;
-    reg [7:0] dout;
+    wire [7:0] dout;
+
+    wire full;
+    reg  wr_en;
+    reg  [7:0] din;
+
+    logic c_full;
+    logic c_wr_en;
+    logic [7:0] c_din;
+    logic r_empty;
+    logic r_rd_en;
+    logic [7:0] r_dout;
 
     tilelink bus();
 
@@ -60,49 +68,67 @@ module tb_remote_rom;
 
     initial begin
         clk = 1'b0;
+        ft_clk = 1'b0;
         rst_n = 1'b0;
-        state = 1'b0;
-        buff = 64'b0;
-        offset = 3'b0;
 
-        dout = 8'b0;
+        state = 1'b0;
+        buff_off = 3'b0;
+        wr_en = 1'b0;
+        din = 8'b0;
 
         #5 rst_n = 1'b1;
 
         #20 read_req(bus, 64'hEFCD_AB89_6745_2301, 8);
 
-        #450
-        full = 1'b0;
-        empty = 1'b1;
+        #470
         state = 1'b0;
-        offset = 3'b0;
+        buff_off = 3'b0;
+        wr_en = 1'b0;
+        din = 8'b0;
 
         read_req(bus, 64'h0123_4567_89AB_CDEF, 8);
 
-        #1000 $finish();
+        #450
+        state = 1'b0;
+        buff_off = 3'b0;
+        wr_en = 1'b0;
+        din = 8'b0;
+
+        read_req(bus, 64'hAABB_CCDD_EEFF_0011, 8);
+
+        #1600 $finish();
     end
 
-    always #10 clk = ~clk;
+    always #10  clk = ~clk;
+    always #8   ft_clk = ~ft_clk;
 
-    always @(posedge clk) begin
-        if (~state) begin
-            if (wr_en) begin
-                if (&offset) begin
-                    full <= 1'b1;
-                    empty <= 1'b0;
+    logic last_empty;
+    dff #(1, 1'b1) dff_read (ft_clk, rst_n, `DISABLE, `DISABLE,
+                             empty, last_empty);
+
+    assign rd_en = ~empty;
+
+    always @(posedge ft_clk, negedge rst_n) begin
+        if (~rst_n) begin
+        end if (~state) begin
+            if (~last_empty) begin
+                //$display($time,, "addr: %x", dout);
+                buff[buff_off] <= dout;
+                buff_off <= buff_off + 1;
+                if (&buff_off) begin
                     state <= 1'b1;
                 end
-
-                buff <= {din, buff[63:8]};
-                offset <= offset + 3'd1;
-                //$display($time,, "addr: %x; buff: %x", din, buff);
             end
         end else begin
-            if (rd_en) begin
-                //$display($time,, "data: %x", buff[7:0]);
-                dout <= buff[7:0];
-                buff <= {8'b0, buff[63:8]};
-                offset <= offset + 3'd1;
+            if (~full) begin
+                //$display($time,, "data: %x", buff[buff_off]);
+                din <= buff[buff_off];
+                wr_en <= `ENABLE;
+                buff_off <= buff_off + 1;
+                buff[buff_off] <= 8'b0;
+                if (&buff_off) begin
+                    state <= 1'b0;
+                end
             end
         end
     end
@@ -139,7 +165,7 @@ module tb_remote_rom;
 `define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
-        $fsdbDumpfile("remote_rom.fsdb");
+        $fsdbDumpfile("remote_rom_with_fifo.fsdb");
         $fsdbDumpvars();
     end
 `endif

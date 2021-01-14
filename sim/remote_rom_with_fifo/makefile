@@ -8,8 +8,9 @@ BASE = remote_rom_with_fifo
 TARGET = tb_${BASE}.elf
 
 SRC_DIR = ../../src
+IP_DIR = ../../ip
 SRC = tb_${BASE}.sv ${SRC_DIR}/remote_rom.sv ${SRC_DIR}/tilelink.sv \
-	${SRC_DIR}/dff.sv
+	${SRC_DIR}/dff.sv ${IP_DIR}/ip_fifo.sv
 
 SIM = ./${TARGET}
 

@@ -25,13 +25,37 @@ module tb_remote_rom;
         .rst_n    (rst_n),
         .bus      (bus),
         /* Command FIFO */
-        .full     (full),
-        .wr_en    (wr_en),
-        .din      (din),
+        .full     (c_full),
+        .wr_en    (c_wr_en),
+        .din      (c_din),
         /* Response FIFO */
-        .empty    (empty),
-        .rd_en    (rd_en),
-        .dout     (dout)
+        .empty    (r_empty),
+        .rd_en    (r_rd_en),
+        .dout     (r_dout)
+    );
+
+    ip_fifo command_fifo (
+        .rst    (~rst_n),
+        .wr_clk (clk),
+        .rd_clk (ft_clk),
+        .full   (c_full),
+        .wr_en  (c_wr_en),
+        .din    (c_din),
+        .empty  (empty),
+        .rd_en  (rd_en),
+        .dout   (dout)
+    );
+
+    ip_fifo response_fifo (
+    	.rst    (~rst_n),
+        .wr_clk (ft_clk),
+        .rd_clk (clk),
+        .full   (full),
+        .wr_en  (wr_en),
+        .din    (din),
+        .empty  (r_empty),
+        .rd_en  (r_rd_en),
+        .dout   (r_dout)
     );
 
     initial begin
@@ -112,7 +136,7 @@ module tb_remote_rom;
         end
     endfunction
 
-//`define FSDB_DUMP
+`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("remote_rom.fsdb");

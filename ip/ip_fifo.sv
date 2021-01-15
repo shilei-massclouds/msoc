@@ -1,5 +1,5 @@
 module ip_fifo (
-    input   wire  rst,
+    input   wire  rst_n,
     input   wire  wr_clk,
     input   wire  rd_clk,
 
@@ -22,23 +22,23 @@ module ip_fifo (
     assign empty = (tail == head);
     assign full = (((tail + 1) % COUNT) == head);
 
-    always @(posedge rst) begin
-        if (rst) begin
+    always @(negedge rst_n) begin
+        if (~rst_n) begin
             head <= 3'b0;
             tail <= 3'b0;
             dout <= 8'b0;
         end
     end
 
-    always @(posedge wr_clk, posedge rst) begin
-        if (~rst & wr_en & ~full) begin
+    always @(posedge wr_clk, negedge rst_n) begin
+        if (rst_n & wr_en & ~full) begin
             cells[tail] <= din;
             tail <= (tail + 1) % COUNT;
         end
     end
 
-    always @(posedge rd_clk, posedge rst) begin
-        if (~rst & rd_en & ~empty) begin
+    always @(posedge rd_clk, negedge rst_n) begin
+        if (rst_n & rd_en & ~empty) begin
             dout <= cells[head];
             head <= (head + 1) % COUNT;
         end

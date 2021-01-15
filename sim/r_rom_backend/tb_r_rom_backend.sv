@@ -82,15 +82,15 @@ module tb_r_rom_backend;
 
     reg siwu_n = `DISABLE_N;
 
-    ip_ft232h ft232h (
-    	.clkout (ft_clk),
-        .adbus  (adbus),
-        .txe    (txe_n),
-        .wr     (wr_n),
-        .siwu   (siwu_n),
-        .rxf    (rxf_n),
-        .oe     (oe_n),
-        .rd     (rd_n)
+    ip_ft232h ip_ft232h (
+        .clkout    (ft_clk),
+        .adbus     (adbus),
+        .txe_n     (txe_n),
+        .wr_n      (wr_n),
+        .siwu_n    (siwu_n),
+        .rxf_n     (rxf_n),
+        .oe_n      (oe_n),
+        .rd_n      (rd_n)
     );
 
     initial begin
@@ -101,9 +101,9 @@ module tb_r_rom_backend;
 
         #20 read_req(bus, 64'hEFCD_AB89_6745_2301, 8);
 
-        #470 read_req(bus, 64'h0123_4567_89AB_CDEF, 8);
+        //#470 read_req(bus, 64'h0123_4567_89AB_CDEF, 8);
 
-        #450 read_req(bus, 64'hAABB_CCDD_EEFF_0011, 8);
+        //#450 read_req(bus, 64'hAABB_CCDD_EEFF_0011, 8);
 
         #1600 $finish();
     end

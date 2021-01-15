@@ -1,6 +1,6 @@
 `include "isa.vh"
 
-module remote_rom (
+module r_rom_frontend (
     input   wire    clk,
     input   wire    rst_n,
 

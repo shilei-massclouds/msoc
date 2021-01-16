@@ -2,14 +2,14 @@
 
 `include "isa.vh"
 
-module tb_middle;
+module tb_backend;
 
     localparam S_WRITE = 1'b0;
     localparam S_READ  = 1'b1;
 
     wire clk;
     wire rst_n;
-    reg  ft_clk;
+    wire ft_clk;
 
     reg state;
     reg [63:0] buff;
@@ -29,11 +29,14 @@ module tb_middle;
     logic r_rd_en;
     logic [7:0] r_dout;
 
-    tilelink bus();
+    wire [7:0] adbus;
+    wire txe_n;
+    wire wr_n;
+    wire rxf_n;
+    wire oe_n;
+    wire rd_n;
 
-    logic last_empty;
-    dff #(1, 1'b1) dff_read (ft_clk, rst_n, `DISABLE, `DISABLE,
-                             c_empty, last_empty);
+    tilelink bus();
 
     clk_rst clk_rst (
         .clk   (clk),
@@ -84,45 +87,38 @@ module tb_middle;
         .dout   (r_dout)
     );
 
-    always #8 ft_clk = ~ft_clk;
-    assign c_rd_en = ~c_empty;
+    ft232h_bridge ft232h_bridge (
+    	.clk   (ft_clk),
+        .rst_n (rst_n),
+        .empty (c_empty),
+        .rd_en (c_rd_en),
+        .dout  (c_dout),
+        .full  (r_full),
+        .wr_en (r_wr_en),
+        .din   (r_din),
+        .txe_n (txe_n),
+        .wr_n  (wr_n),
+        .rxf_n (rxf_n),
+        .oe_n  (oe_n),
+        .rd_n  (rd_n),
+        .adbus (adbus)
+    );
 
-    always @(posedge ft_clk, negedge rst_n) begin
-        if (~rst_n) begin
-            ft_clk <= 1'b0;
-            state <= S_WRITE;
-            buff <= 64'b0;
-            offset <= 3'b0;
-            r_wr_en <= `DISABLE;
-            r_din <= 8'b0;
-        end if (state == S_WRITE) begin
-            r_wr_en <= `DISABLE;
-            if (~last_empty) begin
-                //$display($time,, "addr: %x %x", c_dout, buff);
-                buff <= {c_dout, buff[63:8]};
-                offset <= offset + 1;
-                if (&offset) begin
-                    state <= S_READ;
-                end
-            end
-        end else begin /* state == S_READ */
-            if (~r_full) begin
-                //$display($time,, "data: %x %x", buff[7:0], offset);
-                r_wr_en <= `ENABLE;
-                r_din <= buff[7:0];
-                buff <= {8'b0, buff[63:8]};
-                offset <= offset + 1;
-                if (&offset) begin
-                    state <= S_WRITE;
-                end
-            end
-        end
-    end
+    ip_ft232h ip_ft232h (
+    	.clkout (ft_clk),
+        .adbus  (adbus),
+        .txe_n  (txe_n),
+        .wr_n   (wr_n),
+        .siwu_n (`DISABLE_N),
+        .rxf_n  (rxf_n),
+        .oe_n   (oe_n),
+        .rd_n   (rd_n)
+    );
 
-//`define FSDB_DUMP
+`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
-        $fsdbDumpfile("middle.fsdb");
+        $fsdbDumpfile("backend.fsdb");
         $fsdbDumpvars();
     end
 `endif

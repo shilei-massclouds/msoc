@@ -1,7 +1,8 @@
-module ft232h_ctl (
+module ft232h_bridge (
     input   wire    clk,
     input   wire    rst_n,
 
+    /* W: fifo interface */
     input   wire    empty,
     output  wire    rd_en,
     input   wire    [7:0] dout,
@@ -10,6 +11,7 @@ module ft232h_ctl (
     output  reg     wr_en,
     output  reg     [7:0] din,
 
+    /* E: usb interface */
     input   wire    txe_n,
     output  reg     wr_n,
 
@@ -24,7 +26,6 @@ module ft232h_ctl (
     localparam S_READ  = 1'b1;
 
     reg state;
-    reg [2:0] offset;
     reg [7:0] adbus_buff;
     logic last_empty;
     logic last_oe_n;
@@ -46,26 +47,22 @@ module ft232h_ctl (
         if (~rst_n) begin
             adbus_buff <= 8'b0;
             wr_n <= `DISABLE_N;
-            offset <= 3'b0;
-            state <= S_WRITE;
-        end if (state == S_WRITE) begin
+            wr_en <= `DISABLE;
+            state <= S_READ;
+        end begin
             if (~last_empty) begin
-                $display($time,, "addr: %x", dout);
+                //$display($time,, "addr: %x", dout);
                 adbus_buff <= dout;
                 wr_n <= `ENABLE_N;
-                offset <= offset + 1;
-                if (&offset) begin
-                    state <= S_READ;
-                end
-            end
-        end else begin
-            if (~last_rd_n) begin
-                $display($time,, "data: %x", adbus);
-                din <= adbus;
-                wr_en <= `ENABLE;
-                offset <= offset + 1;
-                if (&offset) begin
-                    state <= S_WRITE;
+                state <= S_WRITE;
+            end else begin
+                wr_n <= `DISABLE_N;
+                wr_en <= `DISABLE;
+                state <= S_READ;
+                if (~last_rd_n) begin
+                    //$display($time,, "data: %x", adbus);
+                    din <= adbus;
+                    wr_en <= `ENABLE;
                 end
             end
         end

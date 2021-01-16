@@ -2,11 +2,22 @@
 
 `include "isa.vh"
 
-module tb_backend;
+module r_rom (
+    input wire clk,
+    input wire ft_clk,
+    input wire rst_n,
 
-    wire clk;
-    wire rst_n;
-    wire ft_clk;
+    tilelink.slave  bus,
+
+    input   wire    txe_n,
+    output  wire    wr_n,
+    output  wire    siwu_n,
+    input   wire    rxf_n,
+    output  wire    oe_n,
+    output  wire    rd_n,
+
+    inout   wire    [7:0] adbus
+);
 
     logic c_full;
     logic c_wr_en;
@@ -22,25 +33,7 @@ module tb_backend;
     logic r_rd_en;
     logic [7:0] r_dout;
 
-    wire [7:0] adbus;
-    wire txe_n;
-    wire wr_n;
-    wire rxf_n;
-    wire oe_n;
-    wire rd_n;
-
-    tilelink bus();
-
-    clk_rst clk_rst (
-        .clk   (clk),
-        .rst_n (rst_n)
-    );
-
-    stimulator stimulator (
-        .clk   (clk),
-        .rst_n (rst_n),
-        .bus   (bus)
-    );
+    assign siwu_n = `DISABLE_N;
 
     r_rom_frontend frontend (
         .clk   (clk),
@@ -81,7 +74,7 @@ module tb_backend;
     );
 
     ft232h_bridge ft232h_bridge (
-        .clk   (ft_clk),
+    	.clk   (ft_clk),
         .rst_n (rst_n),
         .empty (c_empty),
         .rd_en (c_rd_en),
@@ -96,24 +89,5 @@ module tb_backend;
         .rd_n  (rd_n),
         .adbus (adbus)
     );
-
-    ip_ft232h ip_ft232h (
-        .clkout (ft_clk),
-        .adbus  (adbus),
-        .txe_n  (txe_n),
-        .wr_n   (wr_n),
-        .siwu_n (`DISABLE_N),
-        .rxf_n  (rxf_n),
-        .oe_n   (oe_n),
-        .rd_n   (rd_n)
-    );
-
-`define FSDB_DUMP
-`ifdef FSDB_DUMP
-    initial begin
-        $fsdbDumpfile("backend.fsdb");
-        $fsdbDumpvars();
-    end
-`endif
 
 endmodule

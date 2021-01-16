@@ -32,17 +32,13 @@ module tb_fifo;
     assign oe_n = rxf_n;
 
     integer i = 0;
-    reg [7:0] addr[8];
+    reg [63:0] addr[3];
+    reg [63:0] cur_addr;
 
     initial begin
-        addr[0] = 8'hAA;
-        addr[1] = 8'hBB;
-        addr[2] = 8'hCC;
-        addr[3] = 8'hDD;
-        addr[4] = 8'hEE;
-        addr[5] = 8'hFF;
-        addr[6] = 8'h00;
-        addr[7] = 8'h11;
+        addr[0] = 64'h1100FFEEDDCCBBAA;
+        addr[1] = 64'hABCDEF0123456789;
+        addr[2] = 64'h0000000000000000;
 
         siwu_n = `DISABLE_N;
         wr_n = `DISABLE_N;
@@ -51,13 +47,16 @@ module tb_fifo;
         for (integer j = 0; j < 3; j++) begin
             $display($time,, "cycle[%d]", j);
 
+            cur_addr = addr[j];
+
             wait(~txe_n);
             $display($time,, "txe_n: %x", txe_n);
 
             i = 0;
             while (i < 8) begin
                 @ (posedge clkout) begin
-                    adbus_buf = addr[i];
+                    adbus_buf = cur_addr[7:0];
+                    cur_addr = {8'b0, cur_addr[63:8]};
                     i = i + 1;
                     wr_n = `ENABLE_N;
                 end
@@ -93,7 +92,7 @@ module tb_fifo;
         $finish();
     end
 
-`define FSDB_DUMP
+//`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("ft232h.fsdb");

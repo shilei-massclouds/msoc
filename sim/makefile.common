@@ -13,12 +13,12 @@ TARGET = tb_${BASE}.elf
 SIM = ./${TARGET}
 
 all:
-	${VCS} +incdir+${SRC_DIR}+ +define+TEST_OBJ=${TEST_OBJ} -o ${TARGET} ${SRC}
+	${VCS} +incdir+${SRC_DIR}+ +define+TOP_DIR=\"${TOP_DIR}\" -o ${TARGET} ${SRC}
 	${SIM}
 
 clean:
 	rm -rf ./*.elf ./csrc ./*.daidir ./*.log ./simv* ./*.key ./*.fsdb \
-		./novas.* ./verdiLog
+		./novas.* ./verdiLog ./*.h
 
 verdi:
 	verdi -sv -ssf ./${BASE}.fsdb

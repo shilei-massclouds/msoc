@@ -11,7 +11,7 @@ module stimulator (
     reg [63:0] addr_list[ADDR_COUNT] = {
         64'hEFCD_AB89_6745_2301,
         64'h0123_4567_89AB_CDEF,
-        64'hAABB_CCDD_EEFF_0011
+        64'h0000_0000_0000_0000
     };
 
     initial begin

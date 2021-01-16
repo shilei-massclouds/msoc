@@ -1,3 +1,28 @@
+`define LOAD_IMG(filename, base, size) \
+    handle = open_img(filename, base); \
+    if (handle) begin \
+        logic [63:0] addr; \
+        logic [63:0] data; \
+        forever begin \
+            if (load_img(handle, addr, data) < 0) \
+                break; \
+            addr_space[addr] = data; \
+        end \
+        size = close_img(); \
+    end else begin \
+        $display("### Error: No [%s] ###", filename); \
+    end
+
+import "DPI-C" function longint
+open_img(input string filename, input longint base);
+
+import "DPI-C" function int
+close_img();
+
+import "DPI-C" function int
+load_img(input longint handle, output longint addr, output longint data);
+
+
 module ip_ft232h (
     output  wire  clkout,
 
@@ -27,6 +52,8 @@ module ip_ft232h (
     bit i_txe_n = 1'b0;
     bit i_rxf_n = 1'b1;
 
+    reg [63:0] addr_space[bit[60:0]];
+
     assign txe_n = i_txe_n;
     assign rxf_n = i_rxf_n;
 
@@ -47,7 +74,7 @@ module ip_ft232h (
                 state <= S_READ;
                 i_txe_n <= 1'b1;
                 i_rxf_n <= 1'b0;
-                data <= addr;
+                data <= addr_space[addr[63:3]];
                 addr_cnt <= 4'b0;
             end
         end else begin  /* state == S_READ */
@@ -66,6 +93,16 @@ module ip_ft232h (
                 end
             end
         end
+    end
+
+    /* Initialize address space with files */
+    initial begin
+        longint handle;
+        int size = 0;
+        `LOAD_IMG({`TOP_DIR, "/data/head.bin"},    'h0,    size)
+        `LOAD_IMG({`TOP_DIR, "/data/virt.dtb"},    'h100,  size)
+        `LOAD_IMG({`TOP_DIR, "/data/fw_jump.bin"}, 'h2000, size)
+        addr_space['h3ff] = size;
     end
 
 endmodule

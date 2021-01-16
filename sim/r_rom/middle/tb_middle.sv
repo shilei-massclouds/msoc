@@ -36,12 +36,12 @@ module tb_front_end;
                              c_empty, last_empty);
 
     clk_rst clk_rst (
-    	.clk   (clk),
+        .clk   (clk),
         .rst_n (rst_n)
     );
 
     stimulator stimulator (
-    	.clk   (clk),
+        .clk   (clk),
         .rst_n (rst_n),
         .bus   (bus)
     );
@@ -73,7 +73,7 @@ module tb_front_end;
     );
 
     ip_fifo response_fifo (
-    	.rst_n  (rst_n),
+        .rst_n  (rst_n),
         .wr_clk (ft_clk),
         .rd_clk (clk),
         .full   (r_full),
@@ -89,15 +89,16 @@ module tb_front_end;
 
     always @(posedge ft_clk, negedge rst_n) begin
         if (~rst_n) begin
-            ft_clk = 1'b0;
-            state = S_WRITE;
-            buff = 64'b0;
-            offset = 3'b0;
-            r_wr_en = 1'b0;
-            r_din = 8'b0;
+            ft_clk <= 1'b0;
+            state <= S_WRITE;
+            buff <= 64'b0;
+            offset <= 3'b0;
+            r_wr_en <= `DISABLE;
+            r_din <= 8'b0;
         end if (state == S_WRITE) begin
+            r_wr_en <= `DISABLE;
             if (~last_empty) begin
-                $display($time,, "addr: %x %x", c_dout, buff);
+                //$display($time,, "addr: %x %x", c_dout, buff);
                 buff <= {c_dout, buff[63:8]};
                 offset <= offset + 1;
                 if (&offset) begin
@@ -106,7 +107,7 @@ module tb_front_end;
             end
         end else begin /* state == S_READ */
             if (~r_full) begin
-                $display($time,, "data: %x %x", buff[7:0], offset);
+                //$display($time,, "data: %x %x", buff[7:0], offset);
                 r_wr_en <= `ENABLE;
                 r_din <= buff[7:0];
                 buff <= {8'b0, buff[63:8]};
@@ -125,5 +126,5 @@ module tb_front_end;
         $fsdbDumpvars();
     end
 `endif
-    
+
 endmodule

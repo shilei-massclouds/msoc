@@ -15,17 +15,18 @@ module stimulator (
     };
 
     initial begin
+        bus.d_ready = `DISABLE;
         wait(rst_n);
 
         for (integer i = 0; i < ADDR_COUNT; i++) begin
             read_req(bus, addr_list[i], 8);
 
             @ (posedge bus.d_valid);
-            bus.a_valid <= `DISABLE;
+            bus.a_valid = `DISABLE;
             ack(bus);
 
             @ (posedge clk);
-            @ (posedge clk);
+            bus.d_ready = `DISABLE;
         end
 
         $finish();

@@ -1,3 +1,5 @@
+TOP_DIR = ../../..
+
 BASE = backend
 
 SRC = tb_${BASE}.sv ../stimulator.sv ${SRC_DIR}/r_rom_frontend.sv \

@@ -1,9 +1,11 @@
 `timescale 1ns/1ps
 
+`include "isa.vh"
+
 module tb_fifo;
 
-    reg  rst;
-    reg  wr_clk;
+    wire rst_n;
+    wire wr_clk;
     reg  rd_clk;
 
     wire wr_en;
@@ -13,16 +15,30 @@ module tb_fifo;
     wire full;
     wire empty;
 
-    ip_fifo fifo(.*);
+    clk_rst u_clk_rst(
+        .clk   (wr_clk),
+        .rst_n (rst_n)
+    );
+
+    ip_fifo u_ip_fifo(
+        .rst_n  (rst_n),
+        .wr_clk (wr_clk),
+        .rd_clk (rd_clk),
+        .full   (full),
+        .wr_en  (wr_en),
+        .din    (din),
+        .empty  (empty),
+        .rd_en  (rd_en),
+        .dout   (dout)
+    );
 
     assign wr_en = ~full;
     assign rd_en = ~empty;
 
-    always #7 wr_clk = ~wr_clk;
-    always #6 rd_clk = ~rd_clk;
+    always #8 rd_clk = ~rd_clk;
 
-    always @(posedge wr_clk, posedge rst) begin
-        if (rst)
+    always @(posedge wr_clk, negedge rst_n) begin
+        if (~rst_n)
             din <= 8'd0;
         else begin
             if (~full) begin
@@ -32,31 +48,27 @@ module tb_fifo;
     end
 
     reg r_valid;
-    always @(posedge rd_clk, posedge rst) begin
-        if (rst) begin
-            r_valid <= 1'b0;
+    always @(posedge rd_clk, negedge rst_n) begin
+        if (~rst_n) begin
+            r_valid <= `FALSE;
         end else begin
             if (r_valid) begin
                 $display($time,, "%x", dout);
             end
 
             if (rd_en)
-                r_valid <= 1'b1;
+                r_valid <= `TRUE;
             else
-                r_valid <= 1'b0;
+                r_valid <= `FALSE;
         end
     end
 
     initial begin
-        rst = 1'b1;
-        wr_clk = 1'b0;
         rd_clk = 1'b0;
-
-        #5 rst = 1'b0;
-
         #1000 $finish();
     end
 
+//`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("ip_fifo.fsdb");

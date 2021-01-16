@@ -1,21 +1,7 @@
-.PHONY: all clean verdi
+TOP_DIR = ../..
 
-VERDI_BASE = /home/cloud/synopsys/verdi_2016.06-1/share/PLI/VCS/linux64
-VCS = vcs -full64 -sverilog -cpp g++-4.8 -cc gcc-4.8 -LDFLAGS -Wl,--no-as-needed -debug_all \
-		-P ${VERDI_BASE}/novas.tab ${VERDI_BASE}/pli.a
+BASE = ft232h
 
-TARGET = tb_ft232h.elf
+SRC = tb_${BASE}.sv ${IP_DIR}/ip_ft232h.sv
 
-SRC = tb_ft232h.sv ../../ip/ip_ft232h.sv
-
-SIM = ./${TARGET}
-
-all:
-	${VCS} +incdir+../+ +define+TEST_OBJ=${TEST_OBJ} -o ${TARGET} ${SRC}
-	${SIM}
-
-clean:
-	rm -rf ./*.elf ./csrc ./*.daidir ./*.log ./simv* ./*.key ./*.fsdb ./novas.* ./verdiLog
-
-verdi:
-	verdi -sv -ssf ./ip_ft232h.fsdb
+include ../makefile.common

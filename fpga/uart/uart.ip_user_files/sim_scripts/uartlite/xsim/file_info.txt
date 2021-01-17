@@ -1,1 +1,0 @@
-uartlite.vhd,vhdl,xil_defaultlib,../../../../uart.gen/sources_1/ip/uartlite/sim/uartlite.vhd,

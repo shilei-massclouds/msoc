@@ -1,0 +1,6 @@
+.vscode
+csrc
+*.elf
+*.daidir
+*.key
+*.h

@@ -4,25 +4,42 @@
 
 module tb_fetch;
 
-    wire  clk;
-    wire  rst_n;
+    wire clk;
+    wire rst_n;
+    wire ft_clk;
 
-    reg   stall;
-    reg   trap_en;
-    reg   [63:0] trap_pc;
-    reg   bj_en;
-    reg   [63:0] bj_pc;
-    reg   inst_valid;
-    reg   inst_compressed;
+    wire txe_n;
+    wire wr_n;
+    wire siwu_n;
+    wire rxf_n;
+    wire oe_n;
+    wire rd_n;
+    wire [7:0] adbus;
 
-    wire  [63:0] pc;
+    reg  stall;
+    reg  clear;
+    reg  trap_en;
+    reg  [63:0] trap_pc;
+    reg  bj_en;
+    reg  [63:0] bj_pc;
 
-    clk_rst u_clk_rst(
+    wire inst_valid;
+    wire inst_compressed;
+    wire [31:0] inst;
+
+    wire [63:0] pc;
+
+    wire [31:0] inst_out;
+    wire [63:0] pc_out;
+
+    tilelink bus();
+
+    clk_rst u_clk_rst (
         .clk   (clk   ),
         .rst_n (rst_n )
     );
 
-    pc_ctl u_pc_ctl(
+    pc_ctl u_pc_ctl (
         .clk             (clk             ),
         .rst_n           (rst_n           ),
         .stall           (stall           ),
@@ -35,30 +52,80 @@ module tb_fetch;
         .pc              (pc              )
     );
 
+    stage_if_id u_stage_if_id (
+    	.clk      (clk      ),
+        .rst_n    (rst_n    ),
+        .clear    (clear    ),
+        .stall    (stall    ),
+        .bj_en    (bj_en    ),
+        .trap_en  (trap_en  ),
+        .inst_in  (inst     ),
+        .pc_in    (pc       ),
+        .inst_out (inst_out ),
+        .pc_out   (pc_out   )
+    );
+
+    instcache u_instcache (
+    	.clk             (clk             ),
+        .rst_n           (rst_n           ),
+        .pc              (pc              ),
+        .inst_valid      (inst_valid      ),
+        .inst_compressed (inst_compressed ),
+        .inst            (inst            ),
+        .request         (request         ),
+        .bus             (bus)
+    );
+
+    r_rom u_r_rom (
+    	.clk    (clk    ),
+        .ft_clk (ft_clk ),
+        .rst_n  (rst_n  ),
+        .bus    (bus),
+        .txe_n  (txe_n  ),
+        .wr_n   (wr_n   ),
+        .siwu_n (siwu_n ),
+        .rxf_n  (rxf_n  ),
+        .oe_n   (oe_n   ),
+        .rd_n   (rd_n   ),
+        .adbus  (adbus  )
+    );
+
+    ip_ft232h u_ip_ft232h (
+    	.clkout (ft_clk ),
+        .adbus  (adbus  ),
+        .txe_n  (txe_n  ),
+        .wr_n   (wr_n   ),
+        .siwu_n (siwu_n ),
+        .rxf_n  (rxf_n  ),
+        .oe_n   (oe_n   ),
+        .rd_n   (rd_n   )
+    );
+
     initial begin
         stall = `DISABLE;
+        clear = `DISABLE;
         trap_en = `DISABLE;
         trap_pc = 64'b0;
         bj_en = `DISABLE;
         bj_pc = 64'b0;
-        inst_valid = `FALSE;
-        inst_compressed = `FALSE;
 
         wait (rst_n);
+        $display($time,, "fetch test ...");
 
-        #20 inst_valid = `TRUE;
-
-        #20 inst_compressed = `TRUE;
-
-        #20 inst_compressed = `FALSE;
-
-        #20 inst_valid = `FALSE;
-
-        #200 $finish();
+        #5000 $finish();
     end
 
     always @ (posedge clk) begin
-        $display("%d", pc);
+        if (inst_out != 32'h00000001)
+            $display("[%x]: %x", pc_out, inst_out);
     end
+
+`define FSDB_DUMP
+`ifdef FSDB_DUMP
+    initial begin
+        $fsdbDumpfile("fetch.fsdb");
+        $fsdbDumpvars();
+    end
+`endif
     
 endmodule

@@ -4,3 +4,8 @@ csrc
 *.daidir
 *.key
 *.h
+*.fsdb
+*.conf
+*.log
+*.rc
+verdiLog

@@ -8,7 +8,7 @@ module instcache (
     output  wire    inst_compressed,
     output  wire    [31:0] inst,
 
-    output  wire    request,
+    output  reg     request,
     tilelink.master bus
 );
 
@@ -24,8 +24,8 @@ module instcache (
     reg         line_flying1;
 
     /* Input */
-    wire [59:0] row = addr[63:4];
-    wire [2:0] col = addr[3:1];
+    wire [59:0] row = pc[63:4];
+    wire [2:0] col = pc[3:1];
     wire last_col = &col;
 
     /* Intermedium */
@@ -64,13 +64,14 @@ module instcache (
     /* Controller */
     localparam S_CACHING = 2'b00;
     localparam S_PARTIAL = 2'b01;
-    localparam S_FILLING = 2'b10;
+    localparam S_REQUEST = 2'b10;
+    localparam S_FILLING = 2'b11;
 
     logic [1:0] state, next_state;
-    dff #(2, 2'b0) dff_state(clk, reset, `DISABLE, `DISABLE, next_state, state);
+    dff #(2, 2'b0) dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     /* State transition */
-    always @(reset, state, addr, bus.d_valid,
+    always @(rst_n, state, pc, bus.d_valid,
              partial0, partial1, line_flying0, line_flying1,
              hit_next0, hit_next1, hit0, hit1,
              next_line_offset0, next_line_offset1) begin
@@ -79,7 +80,7 @@ module instcache (
                 if ((partial0 & ~hit_next1) | (partial1 & ~hit_next0))
                     next_state = S_PARTIAL;
                 else if (~hit0 & ~hit1)
-                    next_state = S_FILLING;
+                    next_state = S_REQUEST;
                 else
                     next_state = S_CACHING;
             end
@@ -88,7 +89,10 @@ module instcache (
                     (~hit0 & ~hit1))
                     next_state = S_CACHING;
                 else
-                    next_state = S_FILLING;
+                    next_state = S_REQUEST;
+            end
+            S_REQUEST: begin
+                next_state = S_FILLING;
             end
             S_FILLING: begin
                 if (bus.d_valid &
@@ -96,7 +100,7 @@ module instcache (
                      (line_flying1 & next_line_offset1[3])))
                      next_state = S_CACHING;
                 else
-                     next_state = S_FILLING;
+                     next_state = S_REQUEST;
             end
             default:
                 next_state = S_CACHING;
@@ -107,7 +111,8 @@ module instcache (
     reg op_invalid0, op_invalid1;
     reg op_base0, op_base1;
     reg op_request, op_fillin, op_reset;
-    always @(reset, state, addr, bus.d_valid,
+    reg update_addr;
+    always @(rst_n, state, pc, bus.d_valid,
              partial0, partial1, line_flying0, line_flying1,
              hit_next0, hit_next1, hit0, hit1,
              next_line_offset0, next_line_offset1) begin
@@ -118,6 +123,7 @@ module instcache (
         op_request = `DISABLE;
         op_fillin = `DISABLE;
         op_reset = `DISABLE;
+        update_addr = `DISABLE;
 
         case (state)
             S_CACHING: begin
@@ -143,6 +149,9 @@ module instcache (
                     op_invalid0 = `ENABLE;
                     op_base0 = `FALSE;
                 end
+            end
+            S_REQUEST: begin
+                update_addr = `ENABLE;
             end
             S_FILLING: begin
                 if (bus.d_valid) begin
@@ -173,8 +182,8 @@ module instcache (
     assign bus.a_size = 3;
     assign bus.a_source = 4'b0000;
     assign bus.a_mask = 8'hFF;
-    always @(posedge clk, posedge reset) begin
-        if (reset) begin
+    always @(posedge clk, negedge rst_n) begin
+        if (~rst_n) begin
             line_tag0 <= 60'b0;
             line_offset0 <= 4'b0;
             line_flying0 <= 1'b0;
@@ -190,7 +199,6 @@ module instcache (
             line_offset0 <= 4'b0;
             line_flying0 <= 1'b1;
             bus.a_address <= {(op_base0 ? row : row+1), 4'b0};
-            bus.a_valid <= `ENABLE;
             request <= `ENABLE;
         end
 
@@ -199,20 +207,20 @@ module instcache (
             line_offset1 <= 4'b0;
             line_flying1 <= 1'b1;
             bus.a_address <= {(op_base1 ? row : row+1), 4'b0};
-            bus.a_valid <= `ENABLE;
             request <= `ENABLE;
         end
+
+        if (update_addr) bus.a_valid <= `ENABLE;
 
         if (op_request) begin
             if (line_flying0)
                 bus.a_address <= {line_tag0, 4'b1000};
             else
                 bus.a_address <= {line_tag1, 4'b1000};
-
-            bus.a_valid <= `ENABLE;
         end
 
         if (op_fillin) begin
+            bus.a_valid <= `DISABLE;
             if (line_flying0) begin
                 {line_data0[line_offset0+3], line_data0[line_offset0+2],
                  line_data0[line_offset0+1], line_data0[line_offset0]}

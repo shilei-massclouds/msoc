@@ -11,21 +11,20 @@ module pc_ctl (
     input   wire    inst_valid,
     input   wire    inst_compressed,
 
-    output  wire    [63:0] pc
+    output  reg     [63:0] pc
 );
 
-    reg [63:0] last_pc;
-
-    assign pc = trap_en ? trap_pc :
-                bj_en ? bj_pc :
-                (stall | ~inst_valid) ? last_pc :
-                (inst_compressed ? last_pc+2 : last_pc+4);
+    wire [63:0] next_pc = trap_en ? trap_pc :
+                          bj_en ? bj_pc :
+                          (stall | ~inst_valid) ? pc :
+                          (inst_compressed ? pc+2 : pc+4);
 
     always @ (posedge clk, negedge rst_n) begin
         if (~rst_n) begin
-            last_pc <= 64'h1000;
+            //pc <= 64'h1000;
+            pc <= 64'h0;
         end else begin
-            last_pc <= pc;
+            pc <= next_pc;
         end
     end
 

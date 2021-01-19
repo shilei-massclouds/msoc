@@ -65,7 +65,8 @@ module ip_ft232h (
     always @(posedge clk) begin
         if (state == S_WRITE) begin
             if (~wr_n) begin
-                //$display($time,, "addr: %x %x %x", adbus, addr, addr_cnt);
+                //$display($time,, "addr: %x %x %x %x",
+                         //adbus, addr, addr_cnt, wr_n);
                 addr <= {adbus, addr[63:8]};
                 addr_cnt <= addr_cnt + 1;
             end
@@ -80,6 +81,7 @@ module ip_ft232h (
         end else begin  /* state == S_READ */
             if (~oe_n & ~rd_n) begin
                 //$display($time,, "data: %x %x", data, data_cnt);
+                //$display($time,, "[%x]: %x", addr, data);
                 adbus_buff <= data[7:0];
                 data <= {8'b0, data[63:8]};
                 if (data_cnt[3]) begin

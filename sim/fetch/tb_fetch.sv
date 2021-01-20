@@ -27,12 +27,6 @@ module tb_fetch;
     reg  bj_en;
     reg  [63:0] bj_pc;
 
-    wire inst_valid;
-    wire inst_compressed;
-    wire [31:0] inst;
-
-    wire [63:0] pc;
-
     wire [31:0] inst_out;
     wire [63:0] pc_out;
 
@@ -46,44 +40,22 @@ module tb_fetch;
         .rst_n (rst_n )
     );
 
-    pc_ctl u_pc_ctl (
-        .clk             (clk             ),
-        .rst_n           (rst_n           ),
-        .stall           (stall           ),
-        .trap_en         (trap_en         ),
-        .trap_pc         (trap_pc         ),
-        .bj_en           (bj_en           ),
-        .bj_pc           (bj_pc           ),
-        .inst_valid      (inst_valid      ),
-        .inst_compressed (inst_compressed ),
-        .pc              (pc              )
-    );
-
-    stage_if_id u_stage_if_id (
+    fetch fetch (
     	.clk      (clk      ),
         .rst_n    (rst_n    ),
-        .clear    (clear    ),
         .stall    (stall    ),
-        .bj_en    (bj_en    ),
+        .clear    (clear    ),
         .trap_en  (trap_en  ),
-        .inst_in  (inst     ),
-        .pc_in    (pc       ),
+        .trap_pc  (trap_pc  ),
+        .bj_en    (bj_en    ),
+        .bj_pc    (bj_pc    ),
         .inst_out (inst_out ),
-        .pc_out   (pc_out   )
+        .pc_out   (pc_out   ),
+        .request  (request[MASTER_IF]),
+        .bus      (master[MASTER_IF])
     );
-
-    instcache u_instcache (
-    	.clk             (clk               ),
-        .rst_n           (rst_n             ),
-        .pc              (pc                ),
-        .inst_valid      (inst_valid        ),
-        .inst_compressed (inst_compressed   ),
-        .inst            (inst              ),
-        .request         (request[MASTER_IF]),
-        .bus             (master[MASTER_IF] )
-    );
-
-    crossbar u_crossbar(
+    
+    crossbar u_crossbar (
     	.clk     (clk     ),
         .rst_n   (rst_n   ),
         .request (request ),
@@ -92,7 +64,7 @@ module tb_fetch;
         .slave   (slave   )
     );
 
-    zero_page zero_page(slave[CHIP_ZERO]);
+    zero_page zero_page (slave[CHIP_ZERO]);
 
     r_rom u_r_rom (
     	.clk    (clk    ),

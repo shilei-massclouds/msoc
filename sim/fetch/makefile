@@ -5,7 +5,9 @@ BASE = fetch
 SRC = ./tb_fetch.sv ../load.c \
 	${SRC_DIR}/clk_rst.sv ${SRC_DIR}/dff.sv ${SRC_DIR}/tilelink.sv \
 	${IP_DIR}/ip_fifo.sv ${IP_DIR}/ip_ft232h.sv ${IP_DIR}/ip_uart.sv \
-	${SRC_DIR}/fetch/pc_ctl.sv ${SRC_DIR}/fetch/stage_if_id.sv \
+	${SRC_DIR}/fetch/fetch.sv \
+	${SRC_DIR}/fetch/pc_ctl.sv \
+	${SRC_DIR}/fetch/stage_if_id.sv \
 	${SRC_DIR}/fetch/instcache.sv \
 	${SRC_DIR}/zero_page.sv \
 	${SRC_DIR}/crossbar/arbiter.sv ${SRC_DIR}/crossbar/pma.sv \

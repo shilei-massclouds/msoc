@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 
 `include "isa.vh"
+`include "crossbar/addr_space.vh"
 
 module tb_fetch;
 
@@ -15,6 +16,9 @@ module tb_fetch;
     wire oe_n;
     wire rd_n;
     wire [7:0] adbus;
+
+    wire rxd;
+    wire txd;
 
     reg  stall;
     reg  clear;
@@ -32,7 +36,10 @@ module tb_fetch;
     wire [31:0] inst_out;
     wire [63:0] pc_out;
 
-    tilelink bus();
+    logic [15:0] request;
+    wire [15:0] grant;
+    tilelink master[16]();
+    tilelink slave[64]();
 
     clk_rst u_clk_rst (
         .clk   (clk   ),
@@ -66,28 +73,39 @@ module tb_fetch;
     );
 
     instcache u_instcache (
-    	.clk             (clk             ),
-        .rst_n           (rst_n           ),
-        .pc              (pc              ),
-        .inst_valid      (inst_valid      ),
-        .inst_compressed (inst_compressed ),
-        .inst            (inst            ),
-        .request         (request         ),
-        .bus             (bus)
+    	.clk             (clk               ),
+        .rst_n           (rst_n             ),
+        .pc              (pc                ),
+        .inst_valid      (inst_valid        ),
+        .inst_compressed (inst_compressed   ),
+        .inst            (inst              ),
+        .request         (request[MASTER_IF]),
+        .bus             (master[MASTER_IF] )
     );
+
+    crossbar u_crossbar(
+    	.clk     (clk     ),
+        .rst_n   (rst_n   ),
+        .request (request ),
+        .grant   (grant   ),
+        .master  (master  ),
+        .slave   (slave   )
+    );
+
+    zero_page zero_page(slave[CHIP_ZERO]);
 
     r_rom u_r_rom (
     	.clk    (clk    ),
         .ft_clk (ft_clk ),
         .rst_n  (rst_n  ),
-        .bus    (bus),
         .txe_n  (txe_n  ),
         .wr_n   (wr_n   ),
         .siwu_n (siwu_n ),
         .rxf_n  (rxf_n  ),
         .oe_n   (oe_n   ),
         .rd_n   (rd_n   ),
-        .adbus  (adbus  )
+        .adbus  (adbus  ),
+        .bus    (slave[CHIP_ROM])
     );
 
     ip_ft232h u_ip_ft232h (
@@ -99,6 +117,14 @@ module tb_fetch;
         .rxf_n  (rxf_n  ),
         .oe_n   (oe_n   ),
         .rd_n   (rd_n   )
+    );
+
+    ip_uart u_ip_uart (
+    	.clk   (clk   ),
+        .rst_n (rst_n ),
+        .rxd   (rxd   ),
+        .txd   (txd   ),
+        .bus   (slave[CHIP_UART])
     );
 
     initial begin
@@ -115,12 +141,18 @@ module tb_fetch;
         #5000 $finish();
     end
 
+    generate
+        for (genvar i = 1; i < 16; i++) begin: cycle0
+            initial request[i] = `DISABLE;
+        end
+    endgenerate
+
     always @ (posedge clk) begin
         if (inst_out != 32'h00000001)
             $display("[%x]: %x", pc_out, inst_out);
     end
 
-`define FSDB_DUMP
+//`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("fetch.fsdb");

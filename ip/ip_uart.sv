@@ -10,6 +10,7 @@ module ip_uart (
     output  wire    txd
 );
 
+`define SIM_IP_UART
 `ifdef SIM_IP_UART
 
     localparam UART_RBR = 0; /* In:  Recieve Buffer Register */

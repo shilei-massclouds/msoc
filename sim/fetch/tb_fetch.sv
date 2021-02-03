@@ -124,7 +124,7 @@ module tb_fetch;
             $display("[%x]: %x", pc_out, inst_out);
     end
 
-//`define FSDB_DUMP
+`define FSDB_DUMP
 `ifdef FSDB_DUMP
     initial begin
         $fsdbDumpfile("fetch.fsdb");

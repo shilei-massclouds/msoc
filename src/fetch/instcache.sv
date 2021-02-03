@@ -12,235 +12,185 @@ module instcache (
     tilelink.master bus
 );
 
-    /* Internal cache line */
-    reg [15:0]  line_data0[8];
-    reg [59:0]  line_tag0;
-    reg [3:0]   line_offset0;
-    reg         line_flying0;
+    /*
+     * Address space of instruction is within 2^32, so only
+     * low-32-bit part is valid.
+     * PC := {pad(32), tag(24), index(5), offset(3)};
+     */
+    wire [23:0] tag    = pc[31:8];
+    wire [4:0]  index  = pc[7:3];
+    wire [2:0]  offset = pc[2:0];
 
-    reg [15:0]  line_data1[8];
-    reg [59:0]  line_tag1;
-    reg [3:0]   line_offset1;
-    reg         line_flying1;
+    /*
+     * Internal cache line:
+     * Fields := {valid(1), tag(24), data(64)};
+     */
+    `define F_DATA  63:0
+    `define F_TAG   87:64
+    `define F_VALID 88
 
-    /* Input */
-    wire [59:0] row = pc[63:4];
-    wire [2:0] col = pc[3:1];
-    wire last_col = &col;
+    localparam CACHE_WIDTH = 1 + 24 + 64;   /* bits */
+    localparam CACHE_DEPTH = 32;            /* index: 2^5 */
 
-    /* Intermedium */
-    wire hit0 = line_offset0[3] & (row == line_tag0);
-    wire hit1 = line_offset1[3] & (row == line_tag1);
+    bit [(CACHE_WIDTH-1):0] lines[CACHE_DEPTH];
+    reg [1:0]               req_bmp;
+    reg [63:0]              req_addr;
+    wire [63:0]             req_addr_rest;
 
-    wire hit_next0 = line_offset0[3] & ((row + 1) == line_tag0);
-    wire hit_next1 = line_offset1[3] & ((row + 1) == line_tag1);
+    wire hit = lines[index][`F_VALID] & (lines[index][`F_TAG] == tag);
+    wire [63:0] data = lines[index][`F_DATA];
 
-    /* Feedback */
-    wire [3:0] next_line_offset0 = line_offset0 + 4;
-    wire [3:0] next_line_offset1 = line_offset1 + 4;
+    wire inst_of_4bytes = &(data[1:0]);
+    wire crossed = inst_of_4bytes & (offset == 6);
+
+    /* Back half of the instruction if it crosses the boundary. */
+    wire [31:0] bh_pc    = {(pc[31:3] + 1), 3'b0};
+    wire [23:0] bh_tag   = bh_pc[31:8];
+    wire [4:0]  bh_index = bh_pc[7:3];
+    wire [63:0] bh_data = lines[bh_index][`F_DATA];
+
+    wire hit_rest = lines[bh_index][`F_VALID] &
+                    (lines[bh_index][`F_TAG] == bh_tag);
+
+    wire last_req = ^req_bmp;
 
     /* Output */
-    wire inst_compressed0 = ~(&(line_data0[col][1:0]));
-    wire inst_compressed1 = ~(&(line_data1[col][1:0]));
-    assign inst_compressed = (hit0 & inst_compressed0) |
-                             (hit1 & inst_compressed1);
-
-    wire [31:0] data0 = inst_compressed0 ?
-        line_data0[col] : {line_data0[col + 1], line_data0[col]};
-    wire [31:0] data1 = inst_compressed1 ?
-        line_data1[col] : {line_data1[col + 1], line_data1[col]};
-
-    wire partial0 = last_col & hit0 & ~inst_compressed0;
-    wire partial1 = last_col & hit1 & ~inst_compressed1;
-    wire partial = partial0 | partial1;
-
-    assign inst_valid = (~partial & (hit0 | hit1)) |
-        (partial0 & hit_next1) | (partial1 & hit_next0);
+    assign inst_valid = (~crossed & hit) | (crossed & (hit & hit_rest));
+    assign inst_compressed = ~inst_of_4bytes;
     assign inst = inst_valid ?
-        (({32{hit0 & ~partial0}} & data0) | ({32{hit1 & ~partial1}} & data1) |
-         ({32{partial0 & hit_next1}} & {line_data1[0], line_data0[7]}) |
-         ({32{partial1 & hit_next0}} & {line_data0[0], line_data1[7]})) : {16'b0, 16'b1};
+        (({32{~crossed}} & (data >> (offset * 8))) |
+         ({32{crossed}} & {bh_data[15:0], data[63:48]})) : {16'b0, 16'b1};
 
     /* Controller */
-    localparam S_CACHING = 2'b00;
-    localparam S_PARTIAL = 2'b01;
-    localparam S_REQUEST = 2'b10;
-    localparam S_FILLING = 2'b11;
+    localparam S_CACHE = 2'b00;
+    localparam S_ADDR  = 2'b01;
+    localparam S_DATA  = 2'b10;
 
     logic [1:0] state, next_state;
     dff #(2, 2'b0) dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     /* State transition */
-    always @(rst_n, state, pc, bus.d_valid,
-             partial0, partial1, line_flying0, line_flying1,
-             hit_next0, hit_next1, hit0, hit1,
-             next_line_offset0, next_line_offset1) begin
+    always @(state, crossed, hit, hit_rest, bus.d_valid, last_req) begin
         case (state)
-            S_CACHING: begin
-                if ((partial0 & ~hit_next1) | (partial1 & ~hit_next0))
-                    next_state = S_PARTIAL;
-                else if (~hit0 & ~hit1)
-                    next_state = S_REQUEST;
-                else
-                    next_state = S_CACHING;
+            S_CACHE: begin
+                if (crossed) begin
+                    if (hit & hit_rest)
+                        next_state = S_CACHE;
+                    else
+                        next_state = S_ADDR;
+                end else begin
+                    if (hit)
+                        next_state = S_CACHE;
+                    else
+                        next_state = S_ADDR;
+                end
             end
-            S_PARTIAL: begin
-                if ((partial0 & hit_next1) | (partial1 & hit_next0) |
-                    (~hit0 & ~hit1))
-                    next_state = S_CACHING;
+            S_ADDR: begin
+                if (bus.a_ready)
+                    next_state = S_DATA;
                 else
-                    next_state = S_REQUEST;
+                    next_state = S_ADDR;
             end
-            S_REQUEST: begin
-                next_state = S_FILLING;
-            end
-            S_FILLING: begin
-                if (bus.d_valid &
-                    ((line_flying0 & next_line_offset0[3]) |
-                     (line_flying1 & next_line_offset1[3])))
-                     next_state = S_CACHING;
+            S_DATA: begin
+                if (bus.d_valid & last_req)
+                    next_state = S_CACHE;
                 else
-                     next_state = S_REQUEST;
+                    next_state = S_DATA;
             end
             default:
-                next_state = S_CACHING;
+                next_state = S_CACHE;
         endcase
     end
 
     /* Operations for datapath */
-    reg op_invalid0, op_invalid1;
-    reg op_base0, op_base1;
-    reg op_request, op_fillin, op_reset;
-    reg update_addr;
-    always @(rst_n, state, pc, bus.d_valid,
-             partial0, partial1, line_flying0, line_flying1,
-             hit_next0, hit_next1, hit0, hit1,
-             next_line_offset0, next_line_offset1) begin
-        op_invalid0 = `DISABLE;
-        op_invalid1 = `DISABLE;
-        op_base0 = `FALSE;
-        op_base1 = `FALSE;
-        op_request = `DISABLE;
-        op_fillin = `DISABLE;
-        op_reset = `DISABLE;
-        update_addr = `DISABLE;
+    reg set_addr0;
+    reg set_addr1;
+    reg fillin;
+    reg clr_all;
+    reg clr_addr0;
+
+    always @(state, crossed, hit, hit_rest, bus.d_valid, last_req) begin
+        set_addr0 = `DISABLE;
+        set_addr1 = `DISABLE;
+        fillin    = `DISABLE;
+        clr_all   = `DISABLE;
+        clr_addr0 = `DISABLE;
+        bus.d_ready = `DISABLE;
 
         case (state)
-            S_CACHING: begin
-                if (~partial)
-                    if (~hit0 & ~hit1) begin
-                        if (hit_next0) begin
-                            op_invalid1 = `ENABLE;
-                            op_base1 = `TRUE;
-                        end
-                        else begin
-                            op_invalid0 = `ENABLE;
-                            op_base0 = `TRUE;
-                        end
-                    end
-            end
-            S_PARTIAL: begin
-                if (partial0 & ~hit_next1) begin
-                    op_invalid1 = `ENABLE;
-                    op_base1 = `FALSE;
-                end
+            S_CACHE: begin
+                request = `DISABLE;
+                bus.a_valid = `DISABLE;
 
-                if (partial1 & ~hit_next0) begin
-                    op_invalid0 = `ENABLE;
-                    op_base0 = `FALSE;
+                if (crossed) begin
+                    if (~hit) set_addr0 = `ENABLE;
+                    if (~hit_rest) set_addr1 = `ENABLE;
+                end else if (~hit) begin
+                    set_addr0 = `ENABLE;
                 end
             end
-            S_REQUEST: begin
-                update_addr = `ENABLE;
+            S_ADDR: begin
+                request = `ENABLE;
+                bus.a_valid = `ENABLE;
             end
-            S_FILLING: begin
+            S_DATA: begin
+                bus.a_valid = `DISABLE;
+
                 if (bus.d_valid) begin
-                    op_fillin = `ENABLE;
-
-                    if ((line_flying0 & next_line_offset0[3]) |
-                        (line_flying1 & next_line_offset1[3]))
-                        op_reset = `ENABLE;
+                    fillin = `ENABLE;
+                    bus.d_ready = `ENABLE;
+                    if (last_req)
+                        clr_all = `ENABLE;
                     else
-                        op_request = `ENABLE;
+                        clr_addr0 = `ENABLE;
                 end
-            end
-            default: begin
-                op_invalid0 = `DISABLE;
-                op_invalid1 = `DISABLE;
-                op_base0 = `FALSE;
-                op_base1 = `FALSE;
-                op_request = `DISABLE;
-                op_fillin = `DISABLE;
-                op_reset = `DISABLE;
             end
         endcase
     end
 
     /* Datapath */
-    assign bus.d_ready = `ENABLE;
+    assign req_addr_rest = req_addr + 8;
+    assign bus.a_address = req_bmp[0] ? req_addr :
+                           req_bmp[1] ? req_addr_rest : 64'b0;
+    //assign bus.d_ready = `ENABLE;
     assign bus.a_opcode = `TL_GET;
     assign bus.a_size = 3;
     assign bus.a_source = 4'b0000;
     assign bus.a_mask = 8'hFF;
+
     always @(posedge clk, negedge rst_n) begin
+
         if (~rst_n) begin
-            line_tag0 <= 60'b0;
-            line_offset0 <= 4'b0;
-            line_flying0 <= 1'b0;
-            line_tag1 <= 60'b0;
-            line_offset1 <= 4'b0;
-            line_flying1 <= 1'b0;
-            bus.a_valid <= `DISABLE;
+            req_addr <= 64'b0;
+            req_bmp <= 2'b0;
             request <= `DISABLE;
-        end
-        
-        if (op_invalid0) begin
-            line_tag0 <= (op_base0 ? row : row+1);
-            line_offset0 <= 4'b0;
-            line_flying0 <= 1'b1;
-            bus.a_address <= {(op_base0 ? row : row+1), 4'b0};
-            request <= `ENABLE;
-        end
-
-        if (op_invalid1) begin
-            line_tag1 <= (op_base1 ? row : row+1);
-            line_offset1 <= 4'b0;
-            line_flying1 <= 1'b1;
-            bus.a_address <= {(op_base1 ? row : row+1), 4'b0};
-            request <= `ENABLE;
-        end
-
-        if (update_addr) bus.a_valid <= `ENABLE;
-
-        if (op_request) begin
-            if (line_flying0)
-                bus.a_address <= {line_tag0, 4'b1000};
-            else
-                bus.a_address <= {line_tag1, 4'b1000};
-        end
-
-        if (op_fillin) begin
             bus.a_valid <= `DISABLE;
-            if (line_flying0) begin
-                {line_data0[line_offset0+3], line_data0[line_offset0+2],
-                 line_data0[line_offset0+1], line_data0[line_offset0]}
-                    <= bus.d_data;
-                line_offset0 <= next_line_offset0;
-                if (next_line_offset0[3]) line_flying0 <= 1'b0;
+            bus.d_ready <= `DISABLE;
+        end else begin
+            if (set_addr0 | set_addr1) begin
+                req_addr <= {pc[63:3], 3'b0};
+                req_bmp[0] <= set_addr0;
+                req_bmp[1] <= set_addr1;
             end
-            else if (line_flying1) begin
-                {line_data1[line_offset1+3], line_data1[line_offset1+2],
-                 line_data1[line_offset1+1], line_data1[line_offset1]}
-                    <= bus.d_data;
-                line_offset1 <= next_line_offset1;
-                if (next_line_offset1[3]) line_flying1 <= 1'b0;
+
+            if (fillin) begin
+                if (req_bmp[0]) begin
+                    lines[req_addr[7:3]] <= {1'b1, req_addr[31:8], bus.d_data};
+                end else if (req_bmp[1]) begin
+                    lines[req_addr_rest[7:3]] <=
+                        {1'b1, req_addr_rest[31:8], bus.d_data};
+                end
+            end
+
+            if (clr_addr0) begin
+                req_bmp[0] <= 1'b0;
+            end
+
+            if (clr_all) begin
+                req_addr <= 64'b0;
+                req_bmp <= 2'b0;
             end
         end
-
-        if (op_reset) begin
-            bus.a_valid <= `DISABLE;
-            request <= `DISABLE;
-        end
-
     end
+
 endmodule

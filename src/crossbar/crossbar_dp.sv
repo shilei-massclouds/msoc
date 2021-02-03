@@ -18,7 +18,7 @@
 `define SLAVE_IN(id) `A_CHANNEL(slave, id)
 
 `define SLAVE_OUT(id) \
-    (`D_CHANNEL(slave, id) & {86{owner_valid & (chip_sel == id) & a_valid}})
+    (`D_CHANNEL(slave, id) & {86{owner_valid & (chip_sel == id)}})
 
 module crossbar_dp (
     input   wire    clk,
@@ -91,7 +91,7 @@ module crossbar_dp (
             assign `SLAVE_IN(j) = {
                 a_opcode, a_param, a_size, a_source, chip_addr,
                 a_mask, a_data, a_corrupt, a_valid, d_ready
-            } & {152{owner_valid & (chip_sel == j) & a_valid}};
+            } & {152{owner_valid & (chip_sel == j)}};
         end
     endgenerate
 

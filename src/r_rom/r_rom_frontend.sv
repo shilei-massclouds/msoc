@@ -52,7 +52,6 @@ module r_rom_frontend (
     reg cache_addr;
     reg send_addr_byte;
     reg recv_data_byte;
-    reg respond_data;
 
     logic last_empty;
     dff dff_read(clk, rst_n, `DISABLE, `DISABLE, empty, last_empty);
@@ -62,7 +61,9 @@ module r_rom_frontend (
         cache_addr = `DISABLE;
         send_addr_byte = `DISABLE;
         recv_data_byte = `DISABLE;
-        respond_data = `DISABLE;
+        bus.d_valid = `DISABLE;
+        bus.d_data = 64'b0;
+        bus.d_denied = `DISABLE;
 
         case (state)
             S_IDLE:
@@ -71,8 +72,14 @@ module r_rom_frontend (
                 send_addr_byte = `ENABLE;
             S_DATA:
                 if (~last_empty) recv_data_byte = `ENABLE;
-            S_DONE:
-                respond_data = `ENABLE;
+            S_DONE: begin
+                bus.d_data   = data_buf;
+                bus.d_valid  = `ENABLE;
+                bus.d_denied = `ENABLE;
+                bus.d_size   = bus.a_size;
+                bus.d_source = bus.a_source;
+                bus.d_opcode = `TL_ACCESS_ACK_DATA;
+            end
         endcase
     end
 
@@ -88,9 +95,6 @@ module r_rom_frontend (
             bus.d_denied <= `DISABLE;
             wr_en <= 1'b0;
         end else begin
-            bus.d_valid <= `DISABLE;
-            bus.d_data <= 64'b0;
-            bus.d_denied <= `DISABLE;
             wr_en <= 1'b0;
 
             if (cache_addr) begin
@@ -110,14 +114,6 @@ module r_rom_frontend (
                 data_off <= data_off + 3'b1;
             end
 
-            if (respond_data) begin
-                bus.d_data <= data_buf;
-                bus.d_valid <= `ENABLE;
-                bus.d_denied <= `ENABLE;
-                bus.d_size <= bus.a_size;
-                bus.d_source <= bus.a_source;
-                bus.d_opcode <= `TL_ACCESS_ACK_DATA;
-            end
         end
     end
 

@@ -84,7 +84,7 @@ module ip_ft232h (
                 //$display($time,, "[%x]: %x", addr, data);
                 adbus_buff <= data[7:0];
                 data <= {8'b0, data[63:8]};
-                if (data_cnt[3]) begin
+                if (data_cnt == 8) begin
                     state <= S_WRITE;
                     i_txe_n <= 1'b0;
                     i_rxf_n <= 1'b1;

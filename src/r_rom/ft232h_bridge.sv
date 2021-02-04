@@ -34,8 +34,8 @@ module ft232h_bridge (
     dff #(1, 1'b1) dff_read (clk, rst_n, `DISABLE, `DISABLE,
                              empty, last_empty);
 
-    dff dff_oe_n (clk, rst_n, `DISABLE, `DISABLE, oe_n, last_oe_n);
-    dff dff_rd_n (clk, rst_n, `DISABLE, `DISABLE, rd_n, last_rd_n);
+    dff #(1, 1'b1) dff_oe_n (clk, rst_n, `DISABLE, `DISABLE, oe_n, last_oe_n);
+    dff #(1, 1'b1) dff_rd_n (clk, rst_n, `DISABLE, `DISABLE, rd_n, last_rd_n);
 
     assign adbus = (state == S_WRITE) ? adbus_buff : 8'bz;
     assign rd_en = ~empty;
@@ -59,7 +59,7 @@ module ft232h_bridge (
                 wr_n <= `DISABLE_N;
                 wr_en <= `DISABLE;
                 state <= S_READ;
-                if (~last_rd_n) begin
+                if (~last_rd_n & ~rxf_n) begin
                     //$display($time,, "data: %x", adbus);
                     din <= adbus;
                     wr_en <= `ENABLE;

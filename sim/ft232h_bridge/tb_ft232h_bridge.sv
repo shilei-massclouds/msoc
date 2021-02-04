@@ -7,11 +7,11 @@ module tb_ft232h_bridge;
     wire clkout;
     reg  rst_n;
     wire txe_n;
-    reg  wr_n;
-    reg  siwu_n;
+    wire wr_n;
+    wire siwu_n;
     wire rxf_n;
     wire oe_n;
-    reg  rd_n;
+    wire rd_n;
 
     wire [7:0] adbus;
 
@@ -49,7 +49,7 @@ module tb_ft232h_bridge;
     initial begin
         rst_n = 1'b0;
         #20 rst_n = 1'b1;
-        #500 $finish();
+        #1000 $finish();
     end
 
 endmodule

@@ -48,20 +48,28 @@ module fifo_sim (
             full <= 1'b0;
             count <= 8'b0;
         end else begin
-            if (count == 8) begin
-                count <= 8'b0;
-                empty <= 1'b1;
-            end
-
             if (rd_en) begin
                 count <= count + 1;
                 dout <= 8'b0;
+                if (count == 7) begin
+                    count <= 8'b0;
+                    empty <= 1'b1;
+                end
+            end
+
+            if (wr_en) begin
+                count <= count + 1;
+                $display($time,, "din(%x) count(%x)", din, count);
+                if (count == 7) begin
+                    count <= 8'b0;
+                    empty <= 1'b0;
+                end
             end
         end
     end
 
     initial begin
-        $monitor($time,, "dout(%x) din(%x)", dout, din);
+        //$monitor($time,, "dout(%x) din(%x) rd_n(%x)", dout, din, rd_n);
     end
 
 endmodule

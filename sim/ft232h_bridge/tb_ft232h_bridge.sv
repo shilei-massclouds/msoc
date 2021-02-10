@@ -16,7 +16,7 @@ module tb_ft232h_bridge;
     wire [7:0] adbus;
 
     fifo_sim u_fifo_sim(
-    	.clk    (clkout ),
+        .clk    (clkout ),
         .rst_n  (rst_n  ),
         .txe_n  (txe_n  ),
         .wr_n   (wr_n   ),
@@ -26,7 +26,7 @@ module tb_ft232h_bridge;
         .rd_n   (rd_n   ),
         .adbus  (adbus  )
     );
-    
+
     ip_ft232h u_ip_ft232h(
         .clkout (clkout),
         .adbus  (adbus),

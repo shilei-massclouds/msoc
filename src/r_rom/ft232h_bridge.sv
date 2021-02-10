@@ -22,50 +22,41 @@ module ft232h_bridge (
     inout   wire    [7:0] adbus
 );
 
-    localparam S_WRITE = 1'b0;
-    localparam S_READ  = 1'b1;
+    localparam S_IDLE  = 2'b00;
+    localparam S_WAIT  = 2'b01;
+    localparam S_READ  = 2'b10;
+    localparam S_WRITE = 2'b11;
 
-    reg state;
-    reg [7:0] adbus_buff;
-    logic last_empty;
-    logic last_oe_n;
-    logic last_rd_n;
+    /* Controller */
+    logic [1:0] state, next_state;
+    dff #(2, S_IDLE) dff_state(clk, rst_n, `DISABLE, `DISABLE,
+                               next_state, state);
 
-    dff #(1, 1'b1) dff_read (clk, rst_n, `DISABLE, `DISABLE,
-                             empty, last_empty);
+    assign rd_en = (state == S_WRITE) & ~empty & ~txe_n;
+    assign wr_n = ~rd_en;
+    assign adbus = (state == S_WRITE) ? dout : 8'bz;
 
-    dff #(1, 1'b1) dff_oe_n (clk, rst_n, `DISABLE, `DISABLE, oe_n, last_oe_n);
-    dff #(1, 1'b1) dff_rd_n (clk, rst_n, `DISABLE, `DISABLE, rd_n, last_rd_n);
+    assign wr_en = (state == S_READ) & ~rxf_n;
+    assign rd_n = ~wr_en;
+    assign din = (state == S_READ) ? adbus : 8'bz;
 
-    assign adbus = (state == S_WRITE) ? adbus_buff : 8'bz;
-    assign rd_en = ~empty;
+    assign oe_n = ~(((state == S_WAIT) | (state == S_READ)) & ~rxf_n);
 
-    assign oe_n = rxf_n;
-    assign rd_n = last_oe_n;
-
-    always @(posedge clk, negedge rst_n) begin
-        if (~rst_n) begin
-            adbus_buff <= 8'b0;
-            wr_n <= `DISABLE_N;
-            wr_en <= `DISABLE;
-            state <= S_READ;
-        end begin
-            if (~last_empty) begin
-                //$display($time,, "addr: %x", dout);
-                adbus_buff <= dout;
-                wr_n <= `ENABLE_N;
-                state <= S_WRITE;
-            end else begin
-                wr_n <= `DISABLE_N;
-                wr_en <= `DISABLE;
-                state <= S_READ;
-                if (~last_rd_n & ~rxf_n) begin
-                    //$display($time,, "data: %x", adbus);
-                    din <= adbus;
-                    wr_en <= `ENABLE;
-                end
-            end
-        end
+    /* State transition */
+    always @(state, empty, txe_n, rxf_n) begin
+        case (state)
+            S_IDLE:
+                next_state = ~rxf_n ? S_WAIT :
+                             (~empty & ~txe_n) ? S_WRITE : S_IDLE;
+            S_WAIT:
+                next_state = ~rxf_n ? S_READ : S_IDLE;
+            S_READ:
+                next_state = rxf_n ? S_IDLE : S_READ;
+            S_WRITE:
+                next_state = (~txe_n | empty) ? S_IDLE : S_WRITE;
+            default:
+                next_state = S_IDLE;
+        endcase
     end
 
 endmodule

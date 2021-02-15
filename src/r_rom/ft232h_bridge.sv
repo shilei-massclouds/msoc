@@ -1,3 +1,5 @@
+`include "isa.vh"
+
 module ft232h_bridge (
     input   wire    clk,
     input   wire    rst_n,

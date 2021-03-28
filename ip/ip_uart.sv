@@ -10,9 +10,6 @@ module ip_uart (
     output  wire    txd
 );
 
-`define SIM_IP_UART
-`ifdef SIM_IP_UART
-
     localparam UART_RBR = 0; /* In:  Recieve Buffer Register */
     localparam UART_THR = 0; /* Out: Transmitter Holding Register */
     localparam UART_DLL = 0; /* Out: Divisor Latch Low */
@@ -97,47 +94,5 @@ module ip_uart (
             end
         end
     end
-
-`else   /* REAL IP_UART */
-
-    localparam REG_RX_FIFO = 4'h0;
-    localparam REG_TX_FIFO = 4'h4;
-
-    wire interrupt;
-    wire awready;
-    wire arready;
-    wire wready;
-    wire rvalid;
-
-    wire [31:0] rdata;
-    wire [1:0]  rresp;
-    wire [1:0]  bresp;
-
-    uartlite uartlite (
-        .s_axi_aclk(clk),
-        .s_axi_aresetn(rst_n),
-        .interrupt(interrupt),
-        .s_axi_awaddr(REG_TX_FIFO),
-        .s_axi_awvalid(bus.a_valid),
-        .s_axi_awready(awready),
-        .s_axi_wdata(bus.a_data[31:0]),
-        .s_axi_wstrb(4'b0),
-        .s_axi_wvalid(bus.a_valid),
-        .s_axi_wready(wready),
-        .s_axi_bresp(bresp),
-        .s_axi_bvalid(bus.d_valid),
-        .s_axi_bready(1'b1),
-        .s_axi_araddr(REG_RX_FIFO),
-        .s_axi_arvalid(1'b0),
-        .s_axi_arready(arready),
-        .s_axi_rdata(rdata),
-        .s_axi_rresp(rresp),
-        .s_axi_rvalid(rvalid),
-        .s_axi_rready(1'b0),
-        .rx(rxd),
-        .tx(txd)
-    );
-
-`endif  /* IP_UART */
 
 endmodule

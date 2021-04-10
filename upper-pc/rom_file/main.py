@@ -36,13 +36,18 @@ if ret:
     print(ftdi.get_error_string(ctx))
     sys.exit(-1)
 
-while (True):
+while True:
     ret, buf = ftdi.read_data(ctx, 8)
     if ret != 8:
         continue
 
-    print(ret)
-    print(buf[0:(ret-1)])
+    print(buf)
+
+    ret = ftdi.write_data(ctx, buf)
+    if ret != 8:
+        print('write: ' + ftdi.get_error_string(ctx))
+        sys.exit(-1)
+
     '''
     addr = int.from_bytes(buf, 'little')
     print('addr: %x' % addr)

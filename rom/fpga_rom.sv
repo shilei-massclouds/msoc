@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module usb_loopback_top(
+module fpga_rom_test (
     input  wire clk,
     input  wire ft_clk,
     input  wire rst_n,
@@ -60,7 +60,7 @@ module usb_loopback_top(
         .dout  (res_data_in)
     );
 
-    fifo_generator_0 cmd_fifo (
+    fifo cmd_fifo (
         .wr_clk(clk),
         .rd_clk(ft_clk),
         .wr_en(cmd_wr_en),
@@ -71,7 +71,7 @@ module usb_loopback_top(
         .almost_empty(cmd_almost_empty)
     );
 
-    fifo_generator_0 res_fifo (
+    fifo res_fifo (
         .wr_clk(ft_clk),
         .rd_clk(clk),
         .wr_en(res_wr_en),
@@ -94,7 +94,7 @@ module usb_loopback_top(
         .din          (res_data_out    )
     );
 
-    rom_stim u_rom_stim (
+    stimulator u_stimulator (
         .clk   (clk   ),
         .rst_n (rst_n ),
         .bus   (bus)

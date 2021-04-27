@@ -40,6 +40,8 @@ module rom (
     logic state, next_state;
     dff dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
+    assign bus.a_ready = (state == S_IDLE);
+
     /* State transition */
     always @(rst_n, state, bus.a_valid, bus.d_ready) begin
         case (state)
@@ -82,7 +84,6 @@ module rom (
 
 
     /* Todo: bus.a_corrupt means lr or sc */
-    assign bus.a_ready = `ENABLE;
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
             bus.d_valid <= `DISABLE;

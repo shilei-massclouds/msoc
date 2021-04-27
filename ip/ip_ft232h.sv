@@ -42,12 +42,11 @@ module ip_ft232h (
 
     bit clk;
     bit [63:0] addr;
-    bit [3:0]  addr_cnt;
+    bit [2:0]  addr_cnt;
     bit [63:0] data;
-    bit [3:0]  data_cnt;
+    bit [2:0]  data_cnt;
 
     bit [1:0] state;
-    bit [7:0] adbus_buff;
 
     bit i_txe_n = 1'b0;
     bit i_rxf_n = 1'b1;
@@ -58,7 +57,7 @@ module ip_ft232h (
     assign rxf_n = i_rxf_n;
 
     assign clkout = clk;
-    assign adbus = (state == S_READ) ? adbus_buff : 8'bz;
+    assign adbus = (state == S_READ) ? data[7:0] : 8'bz;
 
     always #8 clk = ~clk;
 
@@ -71,25 +70,23 @@ module ip_ft232h (
                 addr_cnt <= addr_cnt + 1;
             end
 
-            if (addr_cnt[3]) begin
+            if (&addr_cnt) begin
                 state <= S_READ;
                 i_txe_n <= 1'b1;
                 i_rxf_n <= 1'b0;
                 data <= addr_space[addr[63:3]];
-                addr_cnt <= 4'b0;
+                addr_cnt <= 3'b0;
             end
         end else begin  /* state == S_READ */
-            if (~oe_n & ~rd_n) begin
+            if (~rd_n) begin
                 //$display($time,, "data: %x %x", data, data_cnt);
                 //$display($time,, "[%x]: %x", addr, data);
-                adbus_buff <= data[7:0];
                 data <= {8'b0, data[63:8]};
-                if (data_cnt == 8) begin
+                if (&data_cnt) begin
                     state <= S_WRITE;
                     i_txe_n <= 1'b0;
                     i_rxf_n <= 1'b1;
-                    adbus_buff <= 8'b0;
-                    data_cnt <= 4'b0;
+                    data_cnt <= 3'b0;
                 end else begin
                     data_cnt <= data_cnt + 1;
                 end

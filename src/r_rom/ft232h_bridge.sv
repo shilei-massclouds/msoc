@@ -1,3 +1,5 @@
+`include "isa.vh"
+
 module ft232h_bridge (
     input   wire    clk,
     input   wire    rst_n,
@@ -53,7 +55,7 @@ module ft232h_bridge (
             S_READ:
                 next_state = rxf_n ? S_IDLE : S_READ;
             S_WRITE:
-                next_state = (~txe_n | empty) ? S_IDLE : S_WRITE;
+                next_state = (txe_n | empty) ? S_IDLE : S_WRITE;
             default:
                 next_state = S_IDLE;
         endcase

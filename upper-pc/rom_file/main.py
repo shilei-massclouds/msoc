@@ -3,6 +3,11 @@
 import sys
 import ftdi1 as ftdi
 
+rom_file = open('../../data/head.bin', 'rb')
+if rom_file is None:
+    print('Open rom file failed')
+    sys.exit(-1)
+
 ctx = ftdi.new()
 
 ret, devlist = ftdi.usb_find_all(ctx, 0x0403, 0x6014)
@@ -41,29 +46,16 @@ while True:
     if ret != 8:
         continue
 
-    print(buf)
-
-    ret = ftdi.write_data(ctx, buf)
-    if ret != 8:
-        print('write: ' + ftdi.get_error_string(ctx))
-        sys.exit(-1)
-
-    '''
     addr = int.from_bytes(buf, 'little')
     print('addr: %x' % addr)
 
     rom_file.seek(addr)
     data = rom_file.read(8)
-    for c in data:
-        print('%x' % c)
-    ret = ftdi.write_data(ctx, data)
-    if ret == 0:
-        print('write: ' + ftdi.get_error_string(ctx))
 
-    print(buf)
-    for c in buf:
-        print('%d' % c)
-    '''
+    ret = ftdi.write_data(ctx, data)
+    if ret != 8:
+        print('write: ' + ftdi.get_error_string(ctx))
+        sys.exit(-1)
 
 ret = ftdi.usb_close(ctx)
 if ret:

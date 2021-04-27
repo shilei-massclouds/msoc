@@ -3,22 +3,21 @@
 `include "isa.vh"
 
 module stimulator (
-    input  wire clk,
-    input  wire rst_n,
+    input wire clk,
+    input wire rst_n,
 
     tilelink.master bus
 );
 
-    localparam S_IDLE = 2'b00;
-    localparam S_ADDR = 2'b01;
+    localparam S_IDLE = 1'b0;
+    localparam S_ADDR = 1'b1;
 
     reg  valid;
     reg  [63:0] address;
 
     /* Generator */
-    wire [1:0] state;
-    reg  [1:0] next_state;
-    dff #(2, 2'b0) dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
+    logic state, next_state;
+    dff dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     assign bus.a_opcode  = `TL_GET;
     assign bus.a_param   = 3'b0;
@@ -31,7 +30,7 @@ module stimulator (
     assign bus.a_valid = (state == S_ADDR);
     assign bus.d_ready = `ENABLE;
 
-    always @(state, valid, bus.a_ready) begin
+    always @(rst_n, state, valid, bus.a_ready) begin
         case (state)
             S_IDLE:
                 next_state = valid ? S_ADDR : S_IDLE;
@@ -63,7 +62,7 @@ module stimulator (
         end else begin
             if (&count) begin
                 valid <= `ENABLE;
-                address <= address + 1;
+                address <= address + 8;
             end else begin
                 valid <= `DISABLE;
                 address <= address;

@@ -22,14 +22,14 @@ module tb_rom;
         .rst_n (rst_n )
     );
 
-    rom_stim u_rom_stim (
+    stimulator u_stimulator (
         .clk    (clk  ),
         .rst_n  (rst_n),
         .bus    (bus  )
     );
 
     rom u_rom (
-    	.clk   (clk   ),
+        .clk   (clk   ),
         .rst_n (rst_n ),
         .bus   (bus   )
     );

@@ -24,14 +24,7 @@ module stimulator (
             pc <= 64'h000;
         end else begin
             pc <= next_pc;
-            if (inst_valid)
-                $display($time,, "inst: %x(%x,%x); pc: (%x : %x); req: %x",
-                         inst, inst_valid, inst_comp, pc, next_pc, request);
         end
-    end
-
-    initial begin
-        #1024 $finish();
     end
 
 endmodule

@@ -47,4 +47,14 @@ module tb_instcache;
         .request    (request    )
     );
 
+    always @(posedge clk, negedge rst_n) begin
+        if (inst_valid)
+            $display($time,, "inst: %x(%x,%x); pc: %x; req: %x",
+                     inst, inst_valid, inst_comp, pc, request);
+    end
+
+    initial begin
+        #1024 $finish();
+    end
+
 endmodule

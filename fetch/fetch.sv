@@ -39,8 +39,19 @@ module fetch (
         .pc         (_pc       )
     );
 
+    instcache instcache (
+        .clk        (clk       ),
+        .rst_n      (rst_n     ),
+        .pc         (_pc       ),
+        .inst_valid (inst_valid),
+        .inst_comp  (inst_comp ),
+        .inst       (_inst     ),
+        .request    (request   ),
+        .bus        (bus       )
+    );
+
     stage_if_id stage_if_id (
-    	.clk      (clk      ),
+        .clk      (clk      ),
         .rst_n    (rst_n    ),
         .clear    (clear    ),
         .stall    (stall    ),
@@ -52,15 +63,4 @@ module fetch (
         .pc_out   (pc       )
     );
 
-    instcache instcache (
-    	.clk        (clk       ),
-        .rst_n      (rst_n     ),
-        .pc         (_pc       ),
-        .inst_valid (inst_valid),
-        .inst_comp  (inst_comp ),
-        .inst       (_inst     ),
-        .request    (request   ),
-        .bus        (bus       )
-    );
-    
 endmodule

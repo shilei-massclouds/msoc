@@ -53,7 +53,7 @@ module tb_rom;
 
     initial begin
         $monitor($time,, "%x, %x", bus.d_data, bus.d_valid);
-        #1024 $finish();
+        #20480 $finish();
     end
 
 endmodule

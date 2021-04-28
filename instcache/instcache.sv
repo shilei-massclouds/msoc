@@ -9,7 +9,7 @@ module instcache (
     input   wire    [63:0] pc,
 
     output  wire    inst_valid,
-    output  wire    inst_compressed,
+    output  wire    inst_comp,
     output  wire    [31:0] inst,
 
     output  reg     request,
@@ -60,7 +60,7 @@ module instcache (
 
     /* Output */
     assign inst_valid = (~crossed & hit) | (crossed & (hit & hit_rest));
-    assign inst_compressed = ~inst_of_4bytes;
+    assign inst_comp  = ~inst_of_4bytes;
     assign inst = inst_valid ?
         (({32{~crossed}} & (data >> (offset * 8))) |
          ({32{crossed}} & {bh_data[15:0], data[63:48]})) : {16'b0, 16'b1};

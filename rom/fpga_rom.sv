@@ -100,4 +100,12 @@ module fpga_rom_test (
         .bus   (bus)
     );
 
+    ila ila (
+        .clk(clk),                  // input wire clk
+        .probe0(bus.d_valid),       // input wire [0:0]  probe0
+        .probe1(bus.d_data),        // input wire [63:0] probe1
+        .probe2(cmd_almost_full),   // input wire [0:0]  probe2
+        .probe3(cmd_data_in)        // input wire [7:0]  probe3
+    );
+
 endmodule

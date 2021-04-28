@@ -51,4 +51,9 @@ module tb_rom;
         .dout         (res_dout        )
     );
 
+    initial begin
+        $monitor($time,, "%x, %x", bus.d_data, bus.d_valid);
+        #1024 $finish();
+    end
+
 endmodule

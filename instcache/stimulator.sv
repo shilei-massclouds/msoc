@@ -9,7 +9,7 @@ module stimulator (
     output  reg  [63:0] pc,
 
     input   wire inst_valid,
-    input   wire inst_compressed,
+    input   wire inst_comp,
     input   wire [31:0] inst,
 
     input   wire request
@@ -17,7 +17,7 @@ module stimulator (
 
     wire [63:0] next_pc;
 
-    assign next_pc = inst_valid ? (pc + (inst_compressed ? 2 : 4)) : pc;
+    assign next_pc = inst_valid ? (pc + (inst_comp ? 2 : 4)) : pc;
 
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
@@ -26,8 +26,7 @@ module stimulator (
             pc <= next_pc;
             if (inst_valid)
                 $display($time,, "inst: %x(%x,%x); pc: (%x : %x); req: %x",
-                         inst, inst_valid, inst_compressed,
-                         pc, next_pc, request);
+                         inst, inst_valid, inst_comp, pc, next_pc, request);
         end
     end
 

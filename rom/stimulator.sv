@@ -72,12 +72,4 @@ module stimulator (
         end
     end
 
-    ila ila (
-        .clk(clk),              // input wire clk
-        .probe0(bus.d_valid),   // input wire [0:0]  probe0
-        .probe1(bus.d_data),    // input wire [63:0] probe1
-        .probe2(valid),         // input wire [0:0]  probe2
-        .probe3(count)          // input wire [7:0]  probe3
-    );
-
 endmodule

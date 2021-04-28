@@ -9,42 +9,42 @@ module tb_instcache;
 
     wire [63:0] pc;
     wire inst_valid;
-    wire inst_compressed;
+    wire inst_comp;
     wire [31:0] inst;
     wire request;
 
     tilelink bus();
 
     clk_rst u_clk_rst (
-        .clk   (clk   ),
-        .rst_n (rst_n )
+        .clk   (clk  ),
+        .rst_n (rst_n)
     );
 
-    rom u_rom(
-        .clk   (clk   ),
-        .rst_n (rst_n ),
-        .bus   (bus)
+    rom u_rom (
+        .clk   (clk  ),
+        .rst_n (rst_n),
+        .bus   (bus  )
     );
 
     instcache u_instcache (
-        .clk             (clk             ),
-        .rst_n           (rst_n           ),
-        .pc              (pc              ),
-        .inst_valid      (inst_valid      ),
-        .inst_compressed (inst_compressed ),
-        .inst            (inst            ),
-        .request         (request         ),
-        .bus             (bus)
+        .clk        (clk       ),
+        .rst_n      (rst_n     ),
+        .pc         (pc        ),
+        .inst_valid (inst_valid),
+        .inst_comp  (inst_comp ),
+        .inst       (inst      ),
+        .request    (request   ),
+        .bus        (bus       )
     );
 
     stimulator u_stimulator (
-        .clk             (clk             ),
-        .rst_n           (rst_n           ),
-        .pc              (pc              ),
-        .inst_valid      (inst_valid      ),
-        .inst_compressed (inst_compressed ),
-        .inst            (inst            ),
-        .request         (request         )
+        .clk        (clk        ),
+        .rst_n      (rst_n      ),
+        .pc         (pc         ),
+        .inst_valid (inst_valid ),
+        .inst_comp  (inst_comp  ),
+        .inst       (inst       ),
+        .request    (request    )
     );
 
 endmodule

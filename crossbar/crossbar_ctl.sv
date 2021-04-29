@@ -1,12 +1,16 @@
+`timescale 1ns / 1ps
+
+`include "isa.vh"
+
 module crossbar_ctl (
-    input   wire    clk,
-    input   wire    rst_n,
+    input  wire clk,
+    input  wire rst_n,
 
-    input   wire    [15:0] request,
-    input   wire    [15:0] grant,
+    input  wire [15:0] request,
+    input  wire [15:0] grant,
 
-    output  reg     set_owner,
-    output  reg     clr_owner
+    output reg  set_owner,
+    output reg  clr_owner
 );
 
     localparam S_IDLE = 1'b0;
@@ -19,7 +23,7 @@ module crossbar_ctl (
     wire request_valid = |request;
 
     /* State transition */
-    always @(rst_n, state, request, grant) begin
+    always @(state, request, grant) begin
         case (state)
             S_IDLE:
                 next_state = request_valid ? S_BUSY : S_IDLE;
@@ -31,7 +35,7 @@ module crossbar_ctl (
     end
 
     /* Operations */
-    always @(rst_n, state, request, grant) begin
+    always @(state, request, grant) begin
         set_owner = `DISABLE;
         clr_owner = `DISABLE;
         case (state)

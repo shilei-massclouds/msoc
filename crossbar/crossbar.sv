@@ -1,3 +1,7 @@
+`timescale 1ns / 1ps
+
+`include "isa.vh"
+
 module crossbar (
     input   wire    clk,
     input   wire    rst_n,

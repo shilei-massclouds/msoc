@@ -1,4 +1,7 @@
-`include "crossbar/addr_space.vh"
+`timescale 1ns / 1ps
+
+`include "isa.vh"
+`include "addr_space.vh"
 
 struct {
     bit[63:0] start;

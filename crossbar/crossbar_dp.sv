@@ -1,3 +1,7 @@
+`timescale 1ns / 1ps
+
+`include "isa.vh"
+
 `define A_CHANNEL(role, id) \
     {role[id].a_opcode, role[id].a_param, role[id].a_size,\
      role[id].a_source, role[id].a_address, role[id].a_mask,\
@@ -65,13 +69,14 @@ module crossbar_dp (
     wire [15:0] abt_request = set_owner ? request : 16'b0;
     wire [15:0] abt_grant;
 
-    arbiter u_arbiter(
+    arbiter u_arbiter (
         .clk     (clk         ),
+        .rst_n   (rst_n       ),
         .request (abt_request ),
         .grant   (abt_grant   )
     );
 
-    pma u_pma(
+    pma u_pma (
         .a_address (a_address ),
         .chip_sel  (chip_sel  ),
         .chip_addr (chip_addr )

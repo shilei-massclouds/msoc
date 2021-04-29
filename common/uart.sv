@@ -1,13 +1,12 @@
+`timescale 1ns / 1ps
+
 `include "isa.vh"
 
-module ip_uart (
+module uart (
     input   wire    clk,
     input   wire    rst_n,
 
-    tilelink.slave  bus,
-
-    input   wire    rxd,
-    output  wire    txd
+    tilelink.slave  bus
 );
 
     localparam UART_RBR = 0; /* In:  Recieve Buffer Register */
@@ -36,10 +35,8 @@ module ip_uart (
     logic state, next_state;
     dff dff_state (clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
-    assign txd = `HIGH;
-
     /* State transition */
-    always @(rst_n, state, bus.a_valid, bus.d_ready) begin
+    always @(state, bus.a_valid, bus.d_ready) begin
         case (state)
             S_IDLE:
                 next_state = bus.a_valid ? S_BUSY : S_IDLE;

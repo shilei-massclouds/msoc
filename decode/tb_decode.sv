@@ -48,7 +48,7 @@ module tb_decode;
         .clear          (clear     ),
         .trap_en        (trap_en   ),
         .bj_en          (bj_en     ),
-    	.pc_in          (pc_in     ),
+        .pc_in          (pc_in     ),
         .inst_in        (inst_in   ),
         .wb_rd          (wb_rd     ),
         .wb_data        (wb_data   ),
@@ -73,7 +73,7 @@ module tb_decode;
         #30 inst_in <= 32'h006283b3;
         #30 inst_in <= 32'h0071a623;
     end
-    
+
     initial begin
         $monitor($time,,
                  "rd(%x) rs(%x,%x) data(%x,%x,%x,%x) alu(%x) mem(%x,%x) bj(%x,%x)",

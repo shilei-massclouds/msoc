@@ -34,9 +34,10 @@ module tb_rom;
         .bus   (bus   )
     );
 
-    initial begin
-        $monitor($time,, "%x, %x", bus.d_data, bus.d_valid);
-        #40960 $finish();
-    end
+    assert_rom u_assert_rom (
+    	.clk   (clk   ),
+        .rst_n (rst_n ),
+        .bus   (bus   )
+    );
 
 endmodule

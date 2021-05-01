@@ -35,7 +35,7 @@ module tb_rom;
     );
 
     assert_rom u_assert_rom (
-    	.clk   (clk   ),
+        .clk   (clk   ),
         .rst_n (rst_n ),
         .bus   (bus   )
     );

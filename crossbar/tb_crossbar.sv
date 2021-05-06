@@ -56,4 +56,9 @@ module tb_crossbar;
         .bus   (slave[CHIP_RAM])
     );
 
+    initial begin
+        $fsdbDumpfile("crossbar.fsdb");
+        $fsdbDumpvars();
+    end
+
 endmodule

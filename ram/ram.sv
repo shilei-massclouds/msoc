@@ -148,7 +148,7 @@ module ram (
                ((~d1[63] & ~d2[63]) & (d1[62:0] < d2[62:0]));
     endfunction
 
-//`define MON_MEM
+`define MON_MEM
 `ifdef MON_MEM
     /* Monitor store data */
     always @(mon_put_addr) begin

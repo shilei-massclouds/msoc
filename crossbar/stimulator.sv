@@ -18,8 +18,8 @@ module stimulator (
     initial begin
         m0_stage = 0;
         m1_stage = 0;
-        #10 write_req(0, master[0], 64'habcd, 64'h400_0000_0000_0410, 8);
-        write_req(1, master[1], 64'h1234, 64'h400_0000_0000_0400, 8);
+        #10 write_req(0, master[0], 64'habcd, 64'h8000_0410, 8);
+        #20 write_req(1, master[1], 64'h1234, 64'h8000_0400, 8);
         request = 16'b11;
     end
 
@@ -27,10 +27,10 @@ module stimulator (
         if (rst_n) begin
             if (~request[0]) begin
                 case (m0_stage)
-                0: write_req(0, master[0], 64'h0201, 64'h400_0000_0000_0418, 8);
-                1: read_req(0, master[0], 64'h400_0000_0000_0410, 8);
-                2: read_req(0, master[0], 64'h400_0000_0000_0400, 8);
-                3: read_req(0, master[0], 64'h400, 8);
+                0: write_req(0, master[0], 64'h0201, 64'h8000_0418, 8);
+                1: read_req(0, master[0], 64'h8000_0410, 8);
+                2: read_req(0, master[0], 64'h0000_0400, 8);
+                3: read_req(0, master[0], 64'h1000, 8);
                 default: m0_stage <= 0;
                 endcase
 
@@ -40,10 +40,10 @@ module stimulator (
 
             if (~request[1]) begin
                 case (m1_stage)
-                0: write_req(1, master[1], 64'h4567, 64'h400_0000_0000_0408, 8);
-                1: read_req(1, master[1], 64'h400_0000_0000_0400, 8);
-                2: read_req(1, master[1], 64'h400_0000_0000_0410, 8);
-                3: read_req(1, master[1], 64'h408, 8);
+                0: write_req(1, master[1], 64'h4567, 64'h8000_0408, 8);
+                1: read_req(1, master[1], 64'h8000_0400, 8);
+                2: read_req(1, master[1], 64'h8000_0410, 8);
+                3: read_req(1, master[1], 64'h1008, 8);
                 default: m1_stage <= 0;
                 endcase
 
@@ -54,17 +54,22 @@ module stimulator (
     end
 
     assign master[0].d_ready = `ENABLE;
-    always @(posedge master[0].d_valid) begin
-        master[0].a_valid <= `DISABLE;
-        request[0] <= 1'b0;
-        ack(master[0], 0);
-    end
-
     assign master[1].d_ready = `ENABLE;
-    always @(posedge master[1].d_valid) begin
-        master[1].a_valid <= `DISABLE;
-        request[1] <= 1'b0;
-        ack(master[1], 1);
+    always @(posedge clk) begin
+        if (~rst_n) begin
+        end else begin
+            if (master[0].d_valid) begin
+                master[0].a_valid <= `DISABLE;
+                request[0] <= 1'b0;
+                ack(master[0], 0);
+            end
+
+            if (master[1].d_valid) begin
+                master[1].a_valid <= `DISABLE;
+                request[1] <= 1'b0;
+                ack(master[1], 1);
+            end
+        end
     end
 
     /* Functions */
@@ -110,7 +115,7 @@ module stimulator (
 
     function ack(virtual tilelink.master bus, input integer source);
         if (bus.d_opcode == `TL_ACCESS_ACK_DATA)
-            $display($time,, "%2x: [%x] Read (%1d) %x.",
+            $display($time,, "%2x: [%x] Read (%1d) %x Ack!",
                      source, bus.a_address, 1 << bus.d_size, bus.d_data);
         else
             $display($time,, "%2x: [%x] Write Ack!", source, bus.a_address);
@@ -121,7 +126,7 @@ module stimulator (
     end
 
     generate
-        for (genvar i = 1; i < 16; i++) begin: cycle0
+        for (genvar i = 0; i < 16; i++) begin: cycle0
             initial request[i] = `DISABLE;
         end
     endgenerate

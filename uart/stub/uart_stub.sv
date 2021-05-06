@@ -2,6 +2,9 @@
 
 `include "isa.vh"
 
+import "DPI-C" function longint
+uart_putc(input byte base);
+
 module uart (
     input   wire    clk,
     input   wire    rst_n,
@@ -92,7 +95,7 @@ module uart (
             control <= 32'b0;
         end else begin
             if (state == S_TX_FIFO) begin
-                $display("UART: %s", bus.a_data[7:0]);
+                uart_putc(bus.a_data[7:0]);
             end else if (state == S_CONTROL) begin
                 control <= bus.a_data[31:0];
             end

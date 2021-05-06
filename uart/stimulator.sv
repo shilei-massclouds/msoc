@@ -59,19 +59,21 @@ module stimulator (
         end
     end
 
-    reg [7:0] count;
+    reg [3:0] count;
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
             valid <= `ENABLE;
             data <= "A";
-            count <= 8'b0;
+            count <= 4'b0;
         end else begin
             if (&count) begin
                 valid <= `ENABLE;
-                if (data >= "Z")
+                if (data == "\n")
                     data <= "A";
+                else if (data >= "Z")
+                    data <= "\n";
                 else
-                    data <= data;
+                    data <= data + 1;
             end else begin
                 valid <= `DISABLE;
             end
@@ -81,7 +83,7 @@ module stimulator (
     end
 
     initial begin
-        #10240 $finish();
+        #20480 $finish();
     end
 
 endmodule

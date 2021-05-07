@@ -25,7 +25,7 @@ module pc_ctl (
 
     always @ (posedge clk, negedge rst_n) begin
         if (~rst_n) begin
-            pc <= 64'b0;
+            pc <= 64'h1000;
         end else begin
             pc <= next_pc;
         end

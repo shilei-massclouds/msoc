@@ -4,7 +4,7 @@
 
 module fetch (
     input   wire    clk,
-    output  wire    rst_n,
+    input   wire    rst_n,
 
     input   wire    stall,
     input   wire    clear,
@@ -61,6 +61,13 @@ module fetch (
         .pc_in    (_pc      ),
         .inst_out (inst     ),
         .pc_out   (pc       )
+    );
+
+    dbg_fetch u_dbg_fetch (
+        .clk   (clk   ),
+        .rst_n (rst_n ),
+        .inst  (inst  ),
+        .pc    (pc    )
     );
 
 endmodule

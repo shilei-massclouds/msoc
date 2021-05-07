@@ -106,11 +106,19 @@ module rom (
         end
     end
 
+    dbg_rom u_dbg_rom (
+    	.clk   (clk         ),
+        .rst_n (rst_n       ),
+        .valid (bus.d_valid ),
+        .data  (bus.d_data  )
+    );
+    
     /* Initialize ram with firmware */
     initial begin
         longint handle;
         int size = 0;
         `LOAD_IMG("data/head.bin", 0, size)
+        $display("###### ROM!!! %x, %x", cells[5], cells[6]);
     end
 
 endmodule

@@ -36,7 +36,6 @@ module assert_rom (
     a0 : assert property (p0);
 
     initial begin
-        $monitor($time,, "%x, %x", bus.d_data, bus.d_valid);
         #31000 $finish();
     end
 

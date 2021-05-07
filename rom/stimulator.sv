@@ -62,7 +62,7 @@ module stimulator (
         end else begin
             if (&count) begin
                 valid <= `ENABLE;
-                if (address >= 40)
+                if (address >= 48)
                     address <= 64'b0;
                 else
                     address <= address + 8;

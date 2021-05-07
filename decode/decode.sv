@@ -13,8 +13,10 @@ module decode (
 
     input wire  [63:0]  pc_in,
     input wire  [31:0]  inst_in,
-    input wire  [4:0]   wb_rd,
-    input wire  [63:0]  wb_data,
+    output wire [4:0]   rs1,
+    output wire [4:0]   rs2,
+    input wire  [63:0]  data1,
+    input wire  [63:0]  data2,
 
     output wire [63:0]  pc_out,
     output wire [4:0]   rd_out,
@@ -32,12 +34,10 @@ module decode (
 );
 
     wire [4:0]   rd_32, rd_16, rd;
-    wire [4:0]   rs1_32, rs1_16, rs1;
-    wire [4:0]   rs2_32, rs2_16, rs2;
+    wire [4:0]   rs1_32, rs1_16;
+    wire [4:0]   rs2_32, rs2_16;
     wire [63:0]  imm_32, imm_16, imm;
     wire         with_imm_32, with_imm_16, with_imm;
-
-    wire [63:0]  data1, data2;
 
     alu_ops alu_ops();
     alu_ops alu_ops_32();
@@ -65,17 +65,6 @@ module decode (
     assign rs2 = compressed ? rs2_16 : rs2_32;
     assign imm = compressed ? imm_16 : imm_32;
     assign with_imm = compressed ? with_imm_16 : with_imm_32;
-
-    regfile u_regfile (
-        .clk     (clk     ),
-        .rst_n   (rst_n   ),
-        .rs1     (rs1     ),
-        .data1   (data1   ),
-        .rs2     (rs2     ),
-        .data2   (data2   ),
-        .wb_rd   (wb_rd   ),
-        .wb_data (wb_data )
-    );
 
     dec_sel dec_sel (
         compressed,

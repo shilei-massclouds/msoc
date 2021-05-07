@@ -22,7 +22,7 @@ module access (
     input  wire [63:0]  result,
     input  wire [63:0]  data2,
 
-    output wire [63:0]  ma_data,
+    output wire [63:0]  ma_out,
 
     output wire [63:0]  pc_out,
     output wire [4:0]   rd_out,
@@ -56,7 +56,7 @@ module access (
     assign request = ma_op;
 
     assign stall = ma_op & ~bus.d_valid;
-    assign ma_data = ma_op ? _out : result;
+    assign ma_out = ma_op ? _out : result;
 
     assign bus.a_address = result;
     assign bus.a_data = data2;
@@ -89,7 +89,7 @@ module access (
         .stall    (stall    ),
         .pc       (pc       ),
         .rd       (rd       ),
-        .data     (ma_data  ),
+        .data     (ma_out   ),
         .pc_out   (pc_out   ),
         .rd_out   (rd_out   ),
         .data_out (data_out )

@@ -26,7 +26,9 @@ module tb_decode;
 
     wire [63:0] pc;
     wire [63:0] data1, data2;
+    wire [63:0] data1_from, data2_from;
     wire [4:0]  rd, rs1, rs2;
+    wire [4:0]  rs1_to, rs2_to;
     wire [63:0] imm;
     wire with_imm;
     wire compressed;
@@ -41,7 +43,7 @@ module tb_decode;
         .rst_n (rst_n )
     );
 
-    decode u_decode(
+    decode u_decode (
         .clk            (clk       ),
         .rst_n          (rst_n     ),
         .stall          (stall     ),
@@ -50,8 +52,10 @@ module tb_decode;
         .bj_en          (bj_en     ),
         .pc_in          (pc_in     ),
         .inst_in        (inst_in   ),
-        .wb_rd          (wb_rd     ),
-        .wb_data        (wb_data   ),
+        .rs1            (rs1_to    ),
+        .rs2            (rs2_to    ),
+        .data1          (data1_from),
+        .data2          (data2_from),
         .pc_out         (pc        ),
         .rd_out         (rd        ),
         .rs1_out        (rs1       ),
@@ -65,6 +69,17 @@ module tb_decode;
         .io_ops_out     (io_ops    ),
         .bj_ops_out     (bj_ops    ),
         .sys_ops_out    (sys_ops   )
+    );
+
+    regfile u_regfile (
+        .clk     (clk       ),
+        .rst_n   (rst_n     ),
+        .rs1     (rs1_to    ),
+        .data1   (data1_from),
+        .rs2     (rs2_to    ),
+        .data2   (data2_from),
+        .wb_rd   (wb_rd     ),
+        .wb_data (wb_data   )
     );
 
     initial begin

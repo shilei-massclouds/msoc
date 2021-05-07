@@ -1,0 +1,5 @@
+li a0, 0x0A0B0C0D
+li tp, 0x80000000
+sw a0, 0x12(tp)
+lw a1, 0x12(tp)
+ebreak

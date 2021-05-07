@@ -3,6 +3,7 @@ module ram (
     input wire rst_n,
     tilelink.slave bus
 );
+
     localparam S_IDLE = 1'b0;
     localparam S_BUSY = 1'b1;
 
@@ -147,6 +148,12 @@ module ram (
                ((d1[63] & d2[63]) & (d1[62:0] > d2[62:0])) |
                ((~d1[63] & ~d2[63]) & (d1[62:0] < d2[62:0]));
     endfunction
+
+    dbg_ram u_dbg_ram (
+        .clk   (clk   ),
+        .rst_n (rst_n ),
+        .bus   (bus   )
+    );
 
 `define MON_MEM
 `ifdef MON_MEM

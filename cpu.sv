@@ -175,4 +175,12 @@ module cpu (
         .wb_out  (wb_out  )
     );
 
+    dbg_regfile u_dbg_regfile (
+    	.clk   (clk   ),
+        .rst_n (rst_n ),
+        .pc    (wb_pc ),
+        .rd    (wb_rd ),
+        .data  (wb_out)
+    );
+
 endmodule

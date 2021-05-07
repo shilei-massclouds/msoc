@@ -8,13 +8,14 @@ SRC = ./soc.sv ./cpu.sv \
 	  ./decode/decode.sv ./decode/stage_id_ex.sv \
 	  ./decode/dec32.sv ./decode/dec16.sv ./decode/dec_sel.sv \
 	  ./execute/execute.sv ./execute/stage_ex_ma.sv ./execute/alu.sv \
-	  ./execute/jmp_br.sv ./execute/system_ctl.sv \
+	  ./execute/jmp_br.sv ./execute/system_ctl.sv ./execute/dbg_execute.sv \
 	  ./access/access.sv ./access/stage_ma_wb.sv \
-	  ./instcache/instcache.sv ./rom/stub/rom_stub.sv ./rom/stub/dbg_rom.sv ./ram/ram.sv \
+	  ./instcache/instcache.sv ./rom/stub/rom_stub.sv ./rom/stub/dbg_rom.sv \
+	  ./ram/ram.sv ./ram/dbg_ram.sv \
 	  ./uart/stub/uart_stub.sv \
 	  ./crossbar/crossbar.sv ./crossbar/arbiter.sv ./crossbar/pma.sv \
 	  ./crossbar/crossbar_ctl.sv ./crossbar/crossbar_dp.sv \
-	  ${COMMON_DIR}/regfile.sv \
+	  ${COMMON_DIR}/regfile.sv ${COMMON_DIR}/dbg_regfile.sv \
 	  ${COMMON_DIR}/clk_rst.sv ${COMMON_DIR}/dff.sv ${COMMON_DIR}/tilelink.sv \
 	  ${COMMON_DIR}/zero_page.sv \
 	  ${COMMON_DIR}/forward.sv \
@@ -23,3 +24,7 @@ SRC = ./soc.sv ./cpu.sv \
 	  ${COMMON_DIR}/load.c
 
 include ${TOP_DIR}/makefile.common
+
+test: build
+	#TEST=tests/calc_add ${SIM}
+	TEST=tests/mem_sw_lw ${SIM}

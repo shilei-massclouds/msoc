@@ -15,6 +15,9 @@
         size = close_img(); \
     end
 
+import "DPI-C" function string
+getenv(input string env_name);
+
 import "DPI-C" function longint
 open_img(input string filename, input longint base);
 
@@ -115,10 +118,18 @@ module rom (
     
     /* Initialize ram with firmware */
     initial begin
+        string test;
         longint handle;
         int size = 0;
-        `LOAD_IMG("data/head.bin", 0, size)
-        $display("###### ROM!!! %x, %x", cells[5], cells[6]);
+
+        test = getenv("TEST");
+        if (test.len() > 0) begin
+            $display("Test: %s", test);
+            `LOAD_IMG({test, ".bin"}, 0, size)
+        end else begin
+            `LOAD_IMG("data/head.bin", 0, size)
+            $display("###### ROM!!! %x, %x", cells[5], cells[6]);
+        end
     end
 
 endmodule

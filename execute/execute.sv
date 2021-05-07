@@ -94,4 +94,11 @@ module execute (
         .io_ops_out  (io_ops_out  )
     );
 
+    dbg_execute u_dbg_execute (
+    	.clk     (clk       ),
+        .rst_n   (rst_n     ),
+        .pc      (pc        ),
+        .sys_ops (sys_ops   )
+    );
+
 endmodule

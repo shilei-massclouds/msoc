@@ -10,3 +10,4 @@ csrc
 *.rc
 verdiLog
 fpga
+*.bin

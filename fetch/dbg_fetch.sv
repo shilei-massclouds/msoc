@@ -13,7 +13,9 @@ module dbg_fetch (
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
         end else begin
-            $display($time,, "Fetch: [%08x] %x", pc, inst);
+            if (`EN_VERBOSE) begin
+                $display($time,, "Fetch: [%08x] %x", pc, inst);
+            end
         end
     end
 

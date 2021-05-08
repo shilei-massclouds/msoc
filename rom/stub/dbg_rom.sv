@@ -13,7 +13,7 @@ module dbg_rom (
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
         end else begin
-            if (valid)
+            if (`EN_VERBOSE & valid)
                 $display($time,, "ROM: %x", data);
         end
     end

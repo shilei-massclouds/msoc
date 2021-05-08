@@ -39,7 +39,7 @@ module system_ctl (
             csr[`MISA] <= MISA_INIT_VAL;
         end else begin
             if (sys_ops.ecall_op | sys_ops.ebreak_op) begin
-                $display($time,, "ecall: mtvec(%x) priv(%x)",
+                $display($time,, "ecall/ebreak: mtvec(%x) priv(%x)",
                          csr[`MTVEC], priv);
                 csr[`MEPC] <= pc;
                 csr[`MCAUSE] <= 64'h08;

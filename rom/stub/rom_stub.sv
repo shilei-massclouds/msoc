@@ -15,17 +15,6 @@
         size = close_img(); \
     end
 
-import "DPI-C" function string
-getenv(input string env_name);
-
-import "DPI-C" function longint
-open_img(input string filename, input longint base);
-
-import "DPI-C" function int
-close_img();
-
-import "DPI-C" function int
-load_img(input longint handle, output longint addr, output longint data);
 
 module rom (
     input wire clk,

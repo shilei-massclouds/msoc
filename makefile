@@ -26,5 +26,6 @@ SRC = ./soc.sv ./cpu.sv \
 include ${TOP_DIR}/makefile.common
 
 test: build
-	#TEST=tests/calc_add ${SIM}
+	make -C tests
+	TEST=tests/calc_add ${SIM}
 	TEST=tests/mem_sw_lw ${SIM}

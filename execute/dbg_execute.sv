@@ -14,8 +14,10 @@ module dbg_execute (
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
         end else begin
-            $display($time,, "Execute: [%08x] ebreak(%x)",
-                     pc, sys_ops.ebreak_op);
+            if (`EN_VERBOSE) begin
+                $display($time,, "Execute: [%08x] ebreak(%x)",
+                         pc, sys_ops.ebreak_op);
+            end
 
             if (sys_ops.ebreak_op)
                 $finish();

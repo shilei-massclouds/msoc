@@ -6,15 +6,24 @@ module alu (
     alu_ops.dst             alu_ops,
     io_ops.dst              io_ops,
     bj_ops.dst              bj_ops,
-    input wire              compressed,
-    input wire [`XMSB:0]    pc,
-    input wire [`XMSB:0]    data1,
-    input wire [`XMSB:0]    data2,
+
+    input  wire             compressed,
+    input  wire [`XMSB:0]   pc,
+    input  wire [`XMSB:0]   fwd1,
+    input  wire [`XMSB:0]   fwd2,
+    input  wire [`XMSB:0]   imm,
+    input  wire             with_imm,
 
     output wire [`XMSB:0]   result
 );
 
     wire zf, cf, sf, of;
+
+    wire [`XMSB:0] data1;
+    wire [`XMSB:0] data2;
+
+    assign data1 = fwd1;
+    assign data2 = with_imm ? imm : fwd2;
 
     wire is_signed = ~alu_ops.is_unsign;
 

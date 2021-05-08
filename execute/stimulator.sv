@@ -23,9 +23,9 @@ module stimulator (
     output reg          with_imm,
 
     output reg  [4:0]   ma_rd,
-    output reg  [63:0]  ma_data,
+    output reg  [63:0]  ma_out,
     output reg  [4:0]   wb_rd,
-    output reg  [63:0]  wb_data
+    output reg  [63:0]  wb_out
 );
 
     initial begin
@@ -38,9 +38,9 @@ module stimulator (
         imm <= 64'd1024;
         with_imm <= `DISABLE;
         ma_rd <= 5'h3;
-        ma_data <= 64'hDDAA;
+        ma_out <= 64'hDDAA;
         wb_rd <= 5'h6;
-        wb_data <= 64'hDCBA;
+        wb_out <= 64'hDCBA;
         alu_ops.add_op <= `ENABLE;
         alu_ops.sub_op <= `DISABLE;
         alu_ops.and_op <= `DISABLE;

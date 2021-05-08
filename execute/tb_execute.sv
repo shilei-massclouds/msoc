@@ -29,9 +29,9 @@ module tb_execute;
     wire        with_imm;
 
     wire [4:0]  ma_rd;
-    wire [63:0] ma_data;
+    wire [63:0] ma_out;
     wire [4:0]  wb_rd;
-    wire [63:0] wb_data;
+    wire [63:0] wb_out;
 
     io_ops  io_ops_out();
 
@@ -70,9 +70,9 @@ module tb_execute;
         .imm        (imm        ),
         .with_imm   (with_imm   ),
         .ma_rd      (ma_rd      ),
-        .ma_data    (ma_data    ),
+        .ma_out     (ma_out     ),
         .wb_rd      (wb_rd      ),
-        .wb_data    (wb_data    )
+        .wb_out     (wb_out     )
     );
 
     forward u_forward (
@@ -81,11 +81,9 @@ module tb_execute;
         .rs2      (rs2      ),
         .data2    (data2    ),
         .ma_rd    (ma_rd    ),
-        .ma_data  (ma_data  ),
+        .ma_out   (ma_out   ),
         .wb_rd    (wb_rd    ),
-        .wb_data  (wb_data  ),
-        .imm      (imm      ),
-        .with_imm (with_imm ),
+        .wb_out   (wb_out   ),
         .out1     (fwd1     ),
         .out2     (fwd2     )
     );

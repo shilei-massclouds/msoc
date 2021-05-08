@@ -58,8 +58,10 @@ module execute (
         .bj_ops     (bj_ops     ),
     	.compressed (compressed ),
         .pc         (pc         ),
-        .data1      (fwd1       ),
-        .data2      (fwd2       ),
+        .fwd1       (fwd1       ),
+        .fwd2       (fwd2       ),
+        .imm        (imm        ),
+        .with_imm   (with_imm   ),
         .result     (result     )
     );
 

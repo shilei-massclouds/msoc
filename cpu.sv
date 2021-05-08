@@ -158,8 +158,6 @@ module cpu (
         .ma_out   (ma_out       ),
         .wb_rd    (wb_rd        ),
         .wb_out   (wb_out       ),
-        .imm      (ex_imm       ),
-        .with_imm (ex_with_imm  ),
         .out1     (fwd1         ),
         .out2     (fwd2         )
     );

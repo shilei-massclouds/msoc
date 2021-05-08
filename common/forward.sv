@@ -11,8 +11,6 @@ module forward (
     input  wire [63:0] ma_out,
     input  wire [4:0]  wb_rd,
     input  wire [63:0] wb_out,
-    input  wire [63:0] imm,
-    input  wire        with_imm,
 
     output wire [63:0] out1,
     output wire [63:0] out2
@@ -22,8 +20,7 @@ module forward (
                   (rs1 == ma_rd) ? ma_out :
                   (rs1 == wb_rd) ? wb_out : data1;
 
-    assign out2 = with_imm ? imm :
-                  !rs2 ? 64'b0 :
+    assign out2 = !rs2 ? 64'b0 :
                   (rs2 == ma_rd) ? ma_out :
                   (rs2 == wb_rd) ? wb_out : data2;
 

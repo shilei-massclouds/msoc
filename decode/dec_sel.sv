@@ -69,6 +69,7 @@ module dec_sel (
     `SYS_MUX(compressed, ecall_op);
     `SYS_MUX(compressed, ebreak_op);
     `SYS_MUX(compressed, mret_op);
+    `SYS_MUX(compressed, wfi_op);
     `SYS_MUX(compressed, csrrw_op);
     `SYS_MUX(compressed, csrrs_op);
     `SYS_MUX(compressed, csrrc_op);

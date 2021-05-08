@@ -38,7 +38,7 @@ module crossbar_dp (
     tilelink.master slave[64]
 );
 
-    wire [5:0] chip_sel;
+    wire [5:0]  chip_sel;
     wire [63:0] chip_addr;
 
     wire [2:0]     a_opcode;
@@ -143,5 +143,22 @@ module crossbar_dp (
             end
         end
     end
+
+    dbg_crossbar_dp u_dbg_crossbar_dp (
+    	.clk       (clk       ),
+        .rst_n     (rst_n     ),
+        .a_opcode  (a_opcode  ),
+        .a_param   (a_param   ),
+        .a_size    (a_size    ),
+        .a_source  (a_source  ),
+        .a_address (a_address ),
+        .a_mask    (a_mask    ),
+        .a_data    (a_data    ),
+        .a_corrupt (a_corrupt ),
+        .a_valid   (a_valid   ),
+        .a_ready   (a_ready   ),
+        .chip_sel  (chip_sel  ),
+        .chip_addr (chip_addr )
+    );
 
 endmodule

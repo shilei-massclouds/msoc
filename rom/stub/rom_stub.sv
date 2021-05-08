@@ -117,6 +117,9 @@ module rom (
             `LOAD_IMG({test, ".bin"}, 0, size)
         end else begin
             `LOAD_IMG("data/head.bin", 0, size)
+            `LOAD_IMG("data/virt.dtb", 'h100, size)
+            `LOAD_IMG("data/fw_jump.bin", 'h2000, size)
+            rom.cells['h3ff] = size;
             $display("###### ROM!!! %x, %x", cells[5], cells[6]);
         end
     end

@@ -99,7 +99,15 @@ module execute (
     dbg_execute u_dbg_execute (
     	.clk     (clk       ),
         .rst_n   (rst_n     ),
+        .stall   (stall     ),
         .pc      (pc        ),
+        .rd      (rd        ),
+        .result  (result_in ),
+        .data2   (fwd2      ),
+        .bj_en   (bj_en     ),
+        .bj_pc   (bj_pc     ),
+        .io_ops  (io_ops    ),
+        .bj_ops  (bj_ops    ),
         .sys_ops (sys_ops   )
     );
 

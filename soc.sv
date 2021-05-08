@@ -23,7 +23,7 @@ module soc;
     assign request[1] = ma_request;
 
     clk_rst u_clk_rst (
-    	.clk   (clk   ),
+        .clk   (clk   ),
         .rst_n (rst_n )
     );
 
@@ -37,7 +37,7 @@ module soc;
     );
 
     cpu u_cpu (
-    	.clk        (clk        ),
+        .clk        (clk        ),
         .rst_n      (rst_n      ),
         .clear      (clear      ),
         .if_request (if_request ),
@@ -52,7 +52,7 @@ module soc;
     ram ram(clk, rst_n, slave[3]);
 
     initial begin
-        #10240 $finish();
+        //#10240 $finish();
     end
 
     generate

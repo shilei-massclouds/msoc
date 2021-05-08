@@ -44,8 +44,7 @@ module instcache (
     wire hit = lines[index][`F_VALID] & (lines[index][`F_TAG] == tag);
     wire [63:0] data = lines[index][`F_DATA];
 
-    wire inst_of_4bytes = &(data[1:0]);
-    wire crossed = inst_of_4bytes & (offset == 6);
+    wire crossed = (offset == 6) & data[49] & data[48];
 
     /* Back half of the instruction if it crosses the boundary. */
     wire [31:0] bh_pc    = {(pc[31:3] + 1), 3'b0};
@@ -60,10 +59,10 @@ module instcache (
 
     /* Output */
     assign inst_valid = (~crossed & hit) | (crossed & (hit & hit_rest));
-    assign inst_comp  = ~inst_of_4bytes;
     assign inst = inst_valid ?
         (({32{~crossed}} & (data >> (offset * 8))) |
          ({32{crossed}} & {bh_data[15:0], data[63:48]})) : {16'b0, 16'b1};
+    assign inst_comp  = ~(&(inst[1:0]));
 
     /* Controller */
     localparam S_CACHE = 2'b00;
@@ -178,6 +177,10 @@ module instcache (
                 req_bmp <= 2'b0;
             end
         end
+    end
+
+    initial begin
+        //$monitor($time,, "data(%x) inst(%x) offset(%x)", data, inst, offset);
     end
 
 endmodule

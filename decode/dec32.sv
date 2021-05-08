@@ -96,6 +96,8 @@ module dec32 (
                       (inst[31:20] == 12'b0000000_00001);
     wire rv_mret    = op_system & (funct3 == 3'b000) &
                       (inst[31:20] == 12'b0011000_00010);
+    wire rv_wfi     = op_system & (funct3 == 3'b000) &
+                      (inst[31:20] == 12'b0001000_00101);
 
     wire rv_csrrw   = op_system & (funct3 == 3'b001);
     wire rv_csrrs   = op_system & (funct3 == 3'b010);
@@ -198,6 +200,7 @@ module dec32 (
     assign sys_ops.ecall_op  = rv_ecall;
     assign sys_ops.ebreak_op = rv_ebreak;
     assign sys_ops.mret_op   = rv_mret;
+    assign sys_ops.wfi_op    = rv_wfi;
 
     assign sys_ops.csrrw_op = rv_csrrw | rv_csrrwi;
     assign sys_ops.csrrs_op = rv_csrrs | rv_csrrsi;

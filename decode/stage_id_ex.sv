@@ -43,7 +43,7 @@ module stage_id_ex (
     wire [17:0] alu_bits_out;
     wire [23:0] io_bits_out;
     wire [7:0]  bj_bits_out;
-    wire [17:0] sys_bits_out;
+    wire [18:0] sys_bits_out;
 
     wire [17:0] alu_bits_in = {alu_ops_in.add_op, alu_ops_in.sub_op,
                                alu_ops_in.and_op, alu_ops_in.or_op,
@@ -69,8 +69,8 @@ module stage_id_ex (
                              bj_ops_in.bltu_op, bj_ops_in.bgeu_op,
                              bj_ops_in.jal_op, bj_ops_in.jalr_op};
 
-    wire [17:0] sys_bits_in = {sys_ops_in.ecall_op, sys_ops_in.ebreak_op,
-                              sys_ops_in.mret_op,
+    wire [18:0] sys_bits_in = {sys_ops_in.ecall_op, sys_ops_in.ebreak_op,
+                              sys_ops_in.mret_op, sys_ops_in.wfi_op,
                               sys_ops_in.csrrw_op, sys_ops_in.csrrs_op,
                               sys_ops_in.csrrc_op, sys_ops_in.csr_addr};
 
@@ -96,11 +96,11 @@ module stage_id_ex (
             bj_ops_out.jal_op, bj_ops_out.jalr_op} = bj_bits_out;
 
     assign {sys_ops_out.ecall_op, sys_ops_out.ebreak_op,
-            sys_ops_out.mret_op,
+            sys_ops_out.mret_op, sys_ops_out.wfi_op,
             sys_ops_out.csrrw_op, sys_ops_out.csrrs_op,
             sys_ops_out.csrrc_op, sys_ops_out.csr_addr} = sys_bits_out;
 
-    dff #(341, 341'b0) dff_stage (
+    dff #(342, 342'b0) dff_stage (
         .clk    (clk),
         .rst_n  (rst_n),
         .clear  (clear | ((bj_en | trap_en) & ~stall)),

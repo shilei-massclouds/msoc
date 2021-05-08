@@ -66,8 +66,8 @@ module fetch (
     dbg_fetch u_dbg_fetch (
         .clk   (clk   ),
         .rst_n (rst_n ),
-        .inst  (inst  ),
-        .pc    (pc    )
+        .inst  (_inst ),
+        .pc    (_pc   )
     );
 
 endmodule

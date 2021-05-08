@@ -155,7 +155,7 @@ module ram (
         .bus   (bus   )
     );
 
-`define MON_MEM
+//`define MON_MEM
 `ifdef MON_MEM
     /* Monitor store data */
     always @(mon_put_addr) begin

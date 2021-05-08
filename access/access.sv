@@ -95,4 +95,14 @@ module access (
         .data_out (data_out )
     );
 
+    dbg_access u_dbg_access (
+    	.clk   (clk   ),
+        .rst_n (rst_n ),
+        .stall (stall ),
+        .pc    (pc    ),
+        .rd    (rd    ),
+        .data  (ma_out),
+        .bus   (bus   )
+    );
+
 endmodule

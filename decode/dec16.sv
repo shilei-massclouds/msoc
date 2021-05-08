@@ -201,6 +201,7 @@ module dec16 (
     assign sys_ops.ecall_op  = 1'b0;
     assign sys_ops.ebreak_op = rc_ebreak;
     assign sys_ops.mret_op   = 1'b0;
+    assign sys_ops.wfi_op    = 1'b0;
 
     assign sys_ops.csrrw_op = 1'b0;
     assign sys_ops.csrrs_op = 1'b0;

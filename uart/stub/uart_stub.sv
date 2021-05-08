@@ -36,52 +36,32 @@ module uart (
     localparam UART_LSR_THRE = 8'b00100000; /* Transmit-hold-register empty */
     localparam UART_LSR_TEMT = 8'b01000000; /* Transmitter empty */
 
-    localparam S_IDLE    = 3'b000;
-    localparam S_RX_FIFO = 3'b001;
-    localparam S_TX_FIFO = 3'b010;
-    localparam S_STATUS  = 3'b011;
-    localparam S_CONTROL = 3'b100;
+    localparam S_IDLE = 1'b0;
+    localparam S_BUSY = 1'b1;
 
     reg [31:0] rx_buffer;
     reg [31:0] status;
     reg [31:0] control;
 
+    reg do_rx;
+    reg do_status;
+
     /* Controller */
-    logic [2:0] state, next_state;
-    dff #(3, 3'b0) dff_stage(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
+    logic state, next_state;
+    dff dff_stage(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     assign bus.a_ready = (state == S_IDLE);
-    assign bus.d_valid = (state == S_RX_FIFO) | (state == S_STATUS);
-    assign bus.d_data = ({32{state == S_RX_FIFO}} & rx_buffer) |
-                        ({32{state == S_STATUS}} & status);
+    assign bus.d_valid = (state == S_BUSY);
+    assign bus.d_data = ({32{do_rx}} & rx_buffer) |
+                        ({32{do_status}} & status);
 
     /* State transition */
     always @(state, bus.a_valid, bus.d_ready) begin
         case (state)
             S_IDLE:
-                if (bus.a_valid) begin
-                    if (bus.a_address == UART_RX_FIFO) begin
-                        next_state = S_RX_FIFO;
-                    end else if (bus.a_address == UART_TX_FIFO) begin
-                        next_state = S_TX_FIFO;
-                    end else if (bus.a_address == UART_STATUS) begin
-                        next_state = S_STATUS;
-                    end else if (bus.a_address == UART_CONTROL) begin
-                        next_state = S_CONTROL;
-                    end else begin
-                        next_state = S_IDLE;
-                    end
-                end else begin
-                    next_state = S_IDLE;
-                end
-            S_RX_FIFO:
-                next_state = bus.d_ready ? S_IDLE : S_RX_FIFO;
-            S_TX_FIFO:
-                next_state = S_IDLE;
-            S_STATUS:
-                next_state = bus.d_ready ? S_IDLE : S_STATUS;
-            S_CONTROL:
-                next_state = S_IDLE;
+                next_state = bus.a_valid ? S_BUSY : S_IDLE;
+            S_BUSY:
+                next_state = bus.d_ready ? S_IDLE : S_BUSY;
             default:
                 next_state = S_IDLE;
         endcase
@@ -93,11 +73,24 @@ module uart (
             rx_buffer <= 32'b0;
             status <= 32'b0;
             control <= 32'b0;
+            do_rx <= `FALSE;
+            do_status <= `FALSE;
         end else begin
-            if (state == S_TX_FIFO) begin
-                uart_putc(bus.a_data[7:0]);
-            end else if (state == S_CONTROL) begin
-                control <= bus.a_data[31:0];
+            if ((state == S_IDLE) & bus.a_valid) begin
+                if (bus.a_address == UART_RX_FIFO) begin
+                    do_rx <= `TRUE;
+                end else if (bus.a_address == UART_TX_FIFO) begin
+                    uart_putc(bus.a_data[7:0]);
+                end else if (bus.a_address == UART_STATUS) begin
+                    do_status <= `TRUE;
+                end else if (bus.a_address == UART_CONTROL) begin
+                    control <= bus.a_data[31:0];
+                end
+            end
+
+            if ((state == S_BUSY) & bus.d_ready) begin
+                do_rx <= `FALSE;
+                do_status <= `FALSE;
             end
         end
     end

@@ -11,7 +11,7 @@ module dbg_ram (
 
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
-        end else if (`EN_VERBOSE) begin
+        end else if (`CHECK_ENV("VERBOSE")) begin
             if (bus.a_valid) begin
                 string opcode;
                 if (bus.a_opcode == `TL_GET)

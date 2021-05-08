@@ -7,7 +7,7 @@ char buffer[256] = {0};
 int
 uart_putc(const char c)
 {
-    if (c == '\n') {
+    if (c == '\n' || c == '\r') {
         printf("UART: %s\n", buffer);
         memset(buffer, 0, sizeof(buffer));
     } else {

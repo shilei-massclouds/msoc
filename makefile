@@ -9,12 +9,13 @@ SRC = ./soc.sv ./cpu.sv \
 	  ./decode/dec32.sv ./decode/dec16.sv ./decode/dec_sel.sv \
 	  ./execute/execute.sv ./execute/stage_ex_ma.sv ./execute/alu.sv \
 	  ./execute/jmp_br.sv ./execute/system_ctl.sv ./execute/dbg_execute.sv \
-	  ./access/access.sv ./access/stage_ma_wb.sv \
+	  ./access/access.sv ./access/stage_ma_wb.sv ./access/dbg_access.sv \
 	  ./instcache/instcache.sv ./rom/stub/rom_stub.sv ./rom/stub/dbg_rom.sv \
 	  ./ram/ram.sv ./ram/dbg_ram.sv \
-	  ./uart/stub/uart_stub.sv \
+	  ./uart/stub/uart_stub.sv ./uart/stub/uart.c \
 	  ./crossbar/crossbar.sv ./crossbar/arbiter.sv ./crossbar/pma.sv \
 	  ./crossbar/crossbar_ctl.sv ./crossbar/crossbar_dp.sv \
+	  ./crossbar/dbg_crossbar_dp.sv \
 	  ${COMMON_DIR}/regfile.sv ${COMMON_DIR}/dbg_regfile.sv \
 	  ${COMMON_DIR}/clk_rst.sv ${COMMON_DIR}/dff.sv ${COMMON_DIR}/tilelink.sv \
 	  ${COMMON_DIR}/zero_page.sv \
@@ -29,3 +30,7 @@ test: build
 	make -C tests
 	TEST=tests/calc_add ${SIM}
 	TEST=tests/mem_sw_lw ${SIM}
+	TEST=tests/bj_ge ${SIM}
+	TEST=tests/j ${SIM}
+	TEST=tests/rom_load ${SIM}
+	TEST=tests/uart_wr ${SIM}

@@ -11,20 +11,38 @@ module dbg_regfile (
     input wire [63:0] data
 );
 
-    string abi_names[32] = {
-        "zero",                                                 /* 0 */
-        "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1",   /* 1 ~ 9 */
-        "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",         /* 10 ~ 17 */
-        "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9",         /* 18 ~ 25 */
-        "s10", "s11", "t3", "t4", "t5", "t6"                    /* 26 ~ 31 */
-    };
-
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
         end else begin
-            if (rd)
-                $display($time,, "Reg: [%08x] %x => %s",
-                         pc, data, abi_names[rd]);
+            if (rd) begin
+                string test = getenv("TEST");
+                case (test)
+                    "tests/calc_add": begin
+                        assert((pc == 'h1004) -> (rd == 7 && data == 8));
+                    end
+                    "tests/mem_sw_lw": begin
+                        assert((pc == 'h1014) ->
+                               (rd == 11 && data == 'h0a0b0c0d));
+                    end
+                    "tests/bj_ge": begin
+                        assert((pc == 'h100c) -> (rd == 7 && data == 'h2));
+                    end
+                    "tests/j": begin
+                        assert((pc == 'h1008) -> (rd == 7 && data == 'h2));
+                    end
+                    "tests/rom_load": begin
+                        assert((pc == 'h1008) ->
+                               (rd == 6 && data == 'ha0b0c0d0e0f01020));
+                        assert((pc == 'h100c) ->
+                               (rd == 7 && data == 'hffffffffe0f01020));
+                        assert((pc == 'h1010) -> (rd == 28 && data == 'h1020));
+                        assert((pc == 'h1014) -> (rd == 29 && data == 'h20));
+                    end
+                endcase
+
+                $display($time,, "Reg: [%08x] %0x => %s(%0d)",
+                         pc, data, abi_names[rd], rd);
+            end
         end
     end
 

@@ -66,6 +66,7 @@ module ram (
 
     /* Todo: bus.a_corrupt means lr or sc */
     assign bus.a_ready = `ENABLE;
+    assign bus.d_param = 2'b0;
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
             bus.d_valid <= `DISABLE;
@@ -85,11 +86,11 @@ module ram (
                         bus.d_data <= 64'b0;
                     mon_put_addr <= bus.a_address;
                 end else if (is_get) begin
-                    bus.d_data <= `DATA_FOR_R;
+                    bus.d_data <= cells[addr];
                     bus.d_opcode <= `TL_ACCESS_ACK_DATA;
                 end else if (is_arith) begin
                     bus.d_opcode <= `TL_ACCESS_ACK_DATA;
-                    bus.d_data <= `DATA_FOR_R;
+                    bus.d_data <= cells[addr];
                     if (bus.a_param == `TL_PARAM_ADD) begin
                         cells[addr] <= `DATA_FOR_W + `DATA_FOR_R;
                         mon_put_addr <= bus.a_address;
@@ -116,7 +117,7 @@ module ram (
                     end
                 end else if (is_logic) begin
                     bus.d_opcode <= `TL_ACCESS_ACK_DATA;
-                    bus.d_data <= `DATA_FOR_R;
+                    bus.d_data <= cells[addr];
                     if (bus.a_param == `TL_PARAM_SWAP) begin
                         cells[addr] <= `DATA_FOR_W;
                         mon_put_addr <= bus.a_address;
@@ -152,6 +153,7 @@ module ram (
     dbg_ram u_dbg_ram (
         .clk   (clk   ),
         .rst_n (rst_n ),
+        .mask  (mask  ),
         .bus   (bus   )
     );
 

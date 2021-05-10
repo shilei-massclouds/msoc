@@ -87,7 +87,11 @@ module instcache (
             S_ADDR:
                 next_state = bus.a_ready ? S_DATA : S_ADDR;
             S_DATA:
-                next_state = (bus.d_valid & last_req) ? S_CACHE : S_DATA;
+                if (bus.d_valid) begin
+                    next_state = last_req ? S_CACHE : S_ADDR;
+                end else begin
+                    next_state = S_DATA;
+                end
             default:
                 next_state = S_CACHE;
         endcase
@@ -179,6 +183,21 @@ module instcache (
         end
     end
 
+    dbg_instcache u_dbg_instcache (
+    	.clk        (clk            ),
+        .rst_n      (rst_n          ),
+        .pc         (pc             ),
+        .state      (state          ),
+        .line       (lines[index]   ),
+        .bh_line    (lines[bh_index]),
+        .req_bmp    (req_bmp        ),
+        .inst_valid (inst_valid     ),
+        .inst_comp  (inst_comp      ),
+        .inst       (inst           ),
+        .request    (request        ),
+        .bus        (bus            )
+    );
+    
     initial begin
         //$monitor($time,, "data(%x) inst(%x) offset(%x)", data, inst, offset);
     end

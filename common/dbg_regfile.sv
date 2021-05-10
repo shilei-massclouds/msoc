@@ -22,7 +22,7 @@ module dbg_regfile (
                     end
                     "tests/mem_sw_lw": begin
                         assert((pc == 'h1014) ->
-                               (rd == 11 && data == 'h0a0b0c0d));
+                               (rd == 10 && data == 'h0a0b0c0d01020304));
                     end
                     "tests/bj_ge": begin
                         assert((pc == 'h100c) -> (rd == 7 && data == 'h2));
@@ -40,8 +40,10 @@ module dbg_regfile (
                     end
                 endcase
 
-                $display($time,, "Reg: [%08x] %0x => %s(%0d)",
-                         pc, data, abi_names[rd], rd);
+                if (getenv("VERBOSE_REG").len() > 0 || check_verbose(pc)) begin
+                    $display($time,, "Reg: [%08x] %0x => %s(%0d)",
+                             pc, data, abi_names[rd], rd);
+                end
             end
         end
     end

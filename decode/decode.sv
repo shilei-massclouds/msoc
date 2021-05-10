@@ -107,4 +107,14 @@ module decode (
         .sys_ops_out    (sys_ops_out    )
     );
 
+    dbg_decode u_dbg_decode (
+    	.clk      (clk      ),
+        .rst_n    (rst_n    ),
+        .pc       (pc_in    ),
+        .data1    (data1    ),
+        .data2    (data2    ),
+        .imm      (imm      ),
+        .with_imm (with_imm )
+    );
+
 endmodule

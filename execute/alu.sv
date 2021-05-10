@@ -67,9 +67,16 @@ module alu (
     wire [127:0] mul_ret = is_signed ? muls_ret : mulu_ret;
     wire [127:0] mulsu_ret = $signed(data1) * data2;
 
+    wire [127:0] divs_ret = $signed(data1) / $signed(data2);
+    wire [127:0] divu_ret = data1 / data2;
+    wire [127:0] div_ret = is_signed ? divs_ret : divu_ret;
+
+    wire [127:0] rems_ret = $signed(data1) % $signed(data2);
+    wire [127:0] remu_ret = data1 % data2;
+    wire [127:0] rem_ret = is_signed ? rems_ret : remu_ret;
+
     wire [`XMSB:0] pc_inc = compressed ? 2 : 4;
 
-    /* Todo: implement DIV[U] and REM[U} */
     wire [63:0] _out =
         ({64{alu_ops.add_op}} & ret) |
         ({64{alu_ops.sub_op}} & ret) |
@@ -85,6 +92,8 @@ module alu (
         ({64{alu_ops.mul_op}} & mul_ret[63:0]) |
         ({64{alu_ops.mulh_op}} & mul_ret[127:64]) |
         ({64{alu_ops.mulhsu_op}} & mulsu_ret[127:64]) |
+        ({64{alu_ops.div_op}} & div_ret[63:0]) |
+        ({64{alu_ops.rem_op}} & rem_ret[63:0]) |
         ({64{amo_op}} & data1) |
         ({64{bj_ops.beq_op|bj_ops.bne_op}} & {63'b0, zf}) |
         ({63'b0, blt_bge & cf}) |

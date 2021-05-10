@@ -7,6 +7,7 @@ module stage_ex_ma (
     input  wire rst_n,
     input  wire clear,
     input  wire stall,
+    input  wire trap_en,
 
     input  wire [`XMSB:0]   pc_in,
     input  wire [4:0]       rd_in,
@@ -34,7 +35,7 @@ module stage_ex_ma (
     dff #(221, 221'b0) dff_stage (
         .clk    (clk),
         .rst_n  (rst_n),
-        .clear  (clear),
+        .clear  (clear | (trap_en & ~stall)),
         .stall  (stall),
         .d      ({pc_in, rd_in, result_in, data2_in, io_bits_in}),
         .q      ({pc_out, rd_out, result_out, data2_out, io_bits_out})

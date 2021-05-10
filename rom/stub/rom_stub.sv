@@ -33,6 +33,7 @@ module rom (
     dff dff_state(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     assign bus.a_ready = (state == S_IDLE);
+    assign bus.d_param = 2'b0;
 
     /* State transition */
     always @(rst_n, state, bus.a_valid, bus.d_ready) begin
@@ -62,18 +63,7 @@ module rom (
     /* Datapath */
     wire is_get = (bus.a_opcode == `TL_GET);
 
-    wire [7:0] size_mask = {{4{bus.a_size[1] & bus.a_size[0]}},
-                            {2{bus.a_size[1]}},
-                            {bus.a_size[1] | bus.a_size[0]}, 1'b1};
     wire [60:0] addr = bus.a_address[63:3];
-    wire [2:0] offset = bus.a_address[2:0];
-    wire [63:0] a_data = bus.a_data << (8 * offset);
-    wire [7:0] a_mask = (bus.a_mask & size_mask) << offset;
-    wire [63:0] mask = {{8{a_mask[7]}}, {8{a_mask[6]}},
-                        {8{a_mask[5]}}, {8{a_mask[4]}},
-                        {8{a_mask[3]}}, {8{a_mask[2]}},
-                        {8{a_mask[1]}}, {8{a_mask[0]}}};
-
 
     /* Todo: bus.a_corrupt means lr or sc */
     always @(posedge clk, negedge rst_n) begin
@@ -89,7 +79,7 @@ module rom (
                 bus.d_size <= bus.a_size;
                 bus.d_source <= bus.a_source;
                 if (is_get) begin
-                    bus.d_data <= (cells[addr] & mask) >> (8 * offset);
+                    bus.d_data <= cells[addr];
                     bus.d_opcode <= `TL_ACCESS_ACK_DATA;
                 end
                 bus.d_valid <= `ENABLE;
@@ -99,12 +89,12 @@ module rom (
     end
 
     dbg_rom u_dbg_rom (
-    	.clk   (clk         ),
+        .clk   (clk         ),
         .rst_n (rst_n       ),
         .valid (bus.d_valid ),
         .data  (bus.d_data  )
     );
-    
+
     /* Initialize ram with firmware */
     initial begin
         string test;
@@ -119,8 +109,11 @@ module rom (
             `LOAD_IMG("data/head.bin", 0, size)
             `LOAD_IMG("data/virt.dtb", 'h100, size)
             `LOAD_IMG("data/fw_jump.bin", 'h2000, size)
-            rom.cells['h3ff] = size;
-            $display("###### ROM!!! %x, %x", cells[5], cells[6]);
+            cells['h3ff] = size;
+            `LOAD_IMG("data/payload.bin", 'h20000, size)
+            cells['h3fff] = size;
+            $display("###### ROM!!! %x, %x, %x",
+                     size, cells['h3ff], cells['h3fff]);
         end
     end
 

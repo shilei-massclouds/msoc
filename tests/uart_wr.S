@@ -8,7 +8,7 @@ _start:
 _loop:
     lb t0, (t1)
     beqz t0, _end
-    sb t0, 4(tp)
+    sb t0, 0(tp)
     addi t1, t1, 1
     j _loop
 

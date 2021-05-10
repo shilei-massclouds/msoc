@@ -23,7 +23,7 @@ module dbg_crossbar_dp (
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
         end else begin
-            if (`CHECK_ENV("VERBOSE")) begin
+            if (check_verbose(64'b0)) begin
                 if (a_valid) begin
                     $display($time,, "Crossbar-dp: a_addr[%08x] chip(%0x : %0x)",
                              a_address, chip_sel, chip_addr);

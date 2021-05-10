@@ -84,6 +84,7 @@ module execute (
         .rst_n       (rst_n       ),
         .clear       (clear       ),
         .stall       (stall       ),
+        .trap_en     (trap_en     ),
         .pc_in       (pc          ),
         .rd_in       (rd          ),
         .result_in   (result_in   ),
@@ -106,6 +107,8 @@ module execute (
         .data2   (fwd2      ),
         .bj_en   (bj_en     ),
         .bj_pc   (bj_pc     ),
+        .trap_en (trap_en   ),
+        .trap_pc (trap_pc   ),
         .io_ops  (io_ops    ),
         .bj_ops  (bj_ops    ),
         .sys_ops (sys_ops   )

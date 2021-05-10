@@ -12,48 +12,32 @@ module uart (
     tilelink.slave  bus
 );
 
-    localparam UART_RX_FIFO = 4'h0; /* In:  Recieve Buffer Register */
-    localparam UART_TX_FIFO = 4'h4; /* Out: Transmitter Holding Register */
-    localparam UART_STATUS  = 4'h8; /* In:  Line Status Register */
-    localparam UART_CONTROL = 4'hc; /* Out: Line Control Register */
-
-    //                          Status Register
-    // +--------+------+------+------+-------+-------+--------+-------+--------+
-    // |  31:8  |  7   |  6   |  5   |   4   |   3   |   2    |   1   |   0    |
-    // +--------+------+------+------+-------+-------+--------+-------+--------+
-    //  Reserved   PE     FE     OE   Intr-En Tx-Full Tx-Empty Rx-Full Rx-Valid
-    //
-    //  PE: Parity Error;   FE: Frame Error;    OE: Overrun Error;
-    //
-
-    //                          Control Register
-    //  +———————————+—————————————+———————————+——————————————+——————————————+
-    //  | 31:5      |     4       |  3:2      |      1       |      0       |
-    //  +———————————+—————————————+———————————+——————————————+——————————————+
-    //    Reserved    Enable Intr   Reserved    Rst Rx FIFO    Rst Tx FIFO
-    //
-
     localparam UART_LSR_THRE = 8'b00100000; /* Transmit-hold-register empty */
     localparam UART_LSR_TEMT = 8'b01000000; /* Transmitter empty */
+
+    localparam UART_RBR = 0; /* In:  Recieve Buffer Register */
+    localparam UART_THR = 0; /* Out: Transmitter Holding Register */
+    localparam UART_DLL = 0; /* Out: Divisor Latch Low */
+    localparam UART_IER = 1; /* I/O: Interrupt Enable Register */
+    localparam UART_DLM = 1; /* Out: Divisor Latch High */
+    localparam UART_FCR = 2; /* Out: FIFO Control Register */
+    localparam UART_IIR = 2; /* I/O: Interrupt Identification Register */
+    localparam UART_LCR = 3; /* Out: Line Control Register */
+    localparam UART_MCR = 4; /* Out: Modem Control Register */
+    localparam UART_LSR = 5; /* In:  Line Status Register */
+    localparam UART_MSR = 6; /* In:  Modem Status Register */
+    localparam UART_SCR = 7; /* I/O: Scratch Register */
 
     localparam S_IDLE = 1'b0;
     localparam S_BUSY = 1'b1;
 
-    reg [31:0] rx_buffer;
-    reg [31:0] status;
-    reg [31:0] control;
+    reg [7:0] lsr;
 
-    reg do_rx;
-    reg do_status;
+    reg read_lsr;
 
     /* Controller */
     logic state, next_state;
-    dff dff_stage(clk, rst_n, `DISABLE, `DISABLE, next_state, state);
-
-    assign bus.a_ready = (state == S_IDLE);
-    assign bus.d_valid = (state == S_BUSY);
-    assign bus.d_data = ({32{do_rx}} & rx_buffer) |
-                        ({32{do_status}} & status);
+    dff dff_state (clk, rst_n, `DISABLE, `DISABLE, next_state, state);
 
     /* State transition */
     always @(state, bus.a_valid, bus.d_ready) begin
@@ -68,29 +52,42 @@ module uart (
     end
 
     /* Datapath */
+    assign bus.a_ready = (state == S_IDLE);
+    assign bus.d_valid = (state == S_BUSY);
+    assign bus.d_data  = {56'b0, {8{read_lsr}} & lsr};
+    assign bus.d_denied = `DISABLE;
+    /* The d_param indicates whether cached. */
+    /* Uart has no cache. */
+    assign bus.d_param = 2'b01;
+
     always @(posedge clk, negedge rst_n) begin
         if (~rst_n) begin
-            rx_buffer <= 32'b0;
-            status <= 32'b0;
-            control <= 32'b0;
-            do_rx <= `FALSE;
-            do_status <= `FALSE;
+            lsr <= UART_LSR_THRE | UART_LSR_TEMT;
+            read_lsr <= `FALSE;
         end else begin
             if ((state == S_IDLE) & bus.a_valid) begin
-                if (bus.a_address == UART_RX_FIFO) begin
-                    do_rx <= `TRUE;
-                end else if (bus.a_address == UART_TX_FIFO) begin
-                    uart_putc(bus.a_data[7:0]);
-                end else if (bus.a_address == UART_STATUS) begin
-                    do_status <= `TRUE;
-                end else if (bus.a_address == UART_CONTROL) begin
-                    control <= bus.a_data[31:0];
+                if (bus.a_address != UART_THR && bus.a_address != UART_LSR)
+                    $display($time,, "Uart: addr(%x)", bus.a_address);
+
+                if (bus.a_opcode == `TL_PUT_F) begin
+                    if (bus.a_address == UART_THR) begin
+                        uart_putc(bus.a_data[7:0]);
+                    end
+                    bus.d_opcode <= `TL_ACCESS_ACK;
+                end else if (bus.a_opcode == `TL_GET) begin
+                    if (bus.a_address == UART_LSR) begin
+                        read_lsr <= `TRUE;
+                    end
+                    bus.d_opcode <= `TL_ACCESS_ACK_DATA;
                 end
+                bus.d_size <= bus.a_size;
+                bus.d_source <= bus.a_source;
             end
 
             if ((state == S_BUSY) & bus.d_ready) begin
-                do_rx <= `FALSE;
-                do_status <= `FALSE;
+                read_lsr <= `FALSE;
+                //do_rx <= `FALSE;
+                //do_status <= `FALSE;
             end
         end
     end

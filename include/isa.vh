@@ -58,6 +58,9 @@
 `define TL_PARAM_AND    3'b010
 `define TL_PARAM_SWAP   3'b011
 
+import "DPI-C" function int
+check_verbose(input longint pc);
+
 import "DPI-C" function string
 getenv(input string env_name);
 

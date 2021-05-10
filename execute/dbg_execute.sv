@@ -16,6 +16,9 @@ module dbg_execute (
     input wire        bj_en,
     input wire [63:0] bj_pc,
 
+    input wire        trap_en,
+    input wire [63:0] trap_pc,
+
     io_ops.dst  io_ops,
     bj_ops.dst  bj_ops,
     sys_ops.dst sys_ops
@@ -28,7 +31,7 @@ module dbg_execute (
             exit <= 1'b0;
             pending <= 1'b0;
         end else begin
-            if (`CHECK_ENV("VERBOSE")) begin
+            if (check_verbose(pc)) begin
                 $display($time,, "Execute: [%08x] rd(%s) ret(%0x) data2(%0x) wfi(%0x) load/store(%0x,%0x) branch(%0x) j(%0x) stall(%0x)",
                          pc, abi_names[rd], result, data2,
                          sys_ops.wfi_op,
@@ -42,6 +45,10 @@ module dbg_execute (
                 if (bj_en)
                     $display($time,, "Execute-BJ: [%08x] bj-pc(%0x)",
                              pc, bj_pc);
+
+                if (trap_en)
+                    $display($time,, "Execute-Trap: [%08x] trap-pc(%0x)",
+                             pc, trap_pc);
             end
 
             pending <= sys_ops.wfi_op;

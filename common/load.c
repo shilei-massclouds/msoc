@@ -68,8 +68,10 @@ open_img(const char *filename, uint64_t base)
         return 0;
 
     _img.handle = fopen(filename, "r");
-    if (_img.handle == NULL)
+    if (_img.handle == NULL) {
+        printf("ERROR: Open %s failed!\n", filename);
         goto error;
+    }
 
     if (_img.type == MEM_IMAGE_ELF) {
         if (parse_phdrs(_img.handle, &_img.u.elf) < 0)
